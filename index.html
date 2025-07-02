@@ -29,12 +29,12 @@
 
     /* Each tab style */
     .tab {
-      background-color: rgba(0, 0, 0, 0.3);  /* transparent black */
+      background-color: black
       color: white;
       padding: 50px 40px;
       cursor: pointer;
       border-radius: 20px;
-      border: 2px solid #ffffff55;
+      border: 2px solid white;
       width: 180px;
       height: 75px;
       display: flex;
@@ -53,9 +53,9 @@
     
     /* Active tab */
     .tab.active {
-      background-color: rgba(255, 255, 255, 0.15); /* Transparent white */
-      color: #ffffff;                        /* white text */
-      border: 2px solid #ffffff33;           /* faint white border */
+      background-color: #333333;
+      color: white;                        /* white text */
+      border: 2px solid white;           /* faint white border */
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);  /* subtle white glow */
     }
 
@@ -121,9 +121,9 @@
   <h1>Welcome to My Blog</h1>
   <p>This is my personal page where I post articles and tutorials.</p>
   <div class="tabs">
-    <div class="tab active" onclick="activateTab(this)">Signal</div>
-    <div class="tab" onclick="activateTab(this)">Math</div>
-    <div class="tab" onclick="activateTab(this)">Tech</div>
+    <div class="tab active" onclick="activateTab(this)">Signal and Systems</div>
+    <div class="tab" onclick="activateTab(this)">Advanced Mathematics</div>
+    <div class="tab" onclick="activateTab(this)">Electronic and Telecommunication Engineering</div>
   </div>
 
   <div id="content">
