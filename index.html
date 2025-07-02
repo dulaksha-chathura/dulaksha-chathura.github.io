@@ -203,20 +203,17 @@
     }
 
     function activateTab(selectedTab) {
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      selectedTab.classList.add('active');
+     const tabText = selectedTab.textContent;
 
-      const content = document.getElementById('content');
-      if (selectedTab.textContent === 'Signal and Systems') {
-        content.innerHTML = `<h2>Signal Articles</h2><p>Here you can put your signal and systems articles content.</p>`;
-      } else if (selectedTab.textContent === 'Advanced Mathematics') {
-        content.innerHTML = `<h2>Math Articles</h2><p>Here you can put your mathematics articles content.</p>`;
-      } else if (selectedTab.textContent === 'Electronic and Telecommunication Engineering') {
-        content.innerHTML = `<h2>Tech Articles</h2><p>Here you can put your science and technology articles content.</p>`;
-      }
-    }
+     if (tabText === 'Signal and Systems') {
+       window.location.href = 'signals.html';
+     } else if (tabText === 'Math') {
+       window.location.href = 'math.html';
+     } else if (tabText === 'Tech') {
+       window.location.href = 'tech.html';
+     }
+   }
+    
   </script>
 </body>
 </html>
