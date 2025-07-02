@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tech Articles – Electronics and Telecommunication</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #ffd700;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background-color: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      background-color: #fff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <a href="#" class="logout" onclick="logout()">Log Out</a>
+
+  <h1>Electronics and Telecommunication Engineering</h1>
+  <p>
+    Electronics and Telecommunication Engineering focuses on the design, development, and deployment of systems that transmit and receive information. It plays a vital role in areas like communication networks, embedded systems, VLSI design, signal processing, and wireless technologies.
+  </p>
+  <p>
+    From antennas and RF systems to IoT and 5G networks, this discipline combines hardware design, mathematical modeling, and system-level optimization to build the connected world.
+  </p>
+  <p>
+    In this section, you'll find technical notes and practical insights related to modern telecommunication systems.
+  </p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.firebasestorage.app",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("You must be logged in to view this page.");
+        window.location.href = "login.html";
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+  </script>
+</body>
+</html>
