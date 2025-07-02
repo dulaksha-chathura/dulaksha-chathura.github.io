@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <style>
+    body {
+      text-align: center;
+      padding: 100px;
+      font-family: Arial;
+      background-color: #111;
+      color: white;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      width: 250px;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create Account</h1>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button onclick="signup()">Sign Up</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.firebasestorage.app",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("Signup successful!");
+          window.location.href = "index.html";
+        })
+        .catch(err => alert(err.message));
+    }
+  </script>
+</body>
+</html>
