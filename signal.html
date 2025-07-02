@@ -1,9 +1,43 @@
 <!DOCTYPE html>
 <html>
-<head><title>Signals and Systems</title></head>
+<head>
+  <title>Signals and Systems</title>
+</head>
 <body>
-  <h1>Signals and Systems Articles</h1>
-  <p>Coming soon...</p>
-  <a href="index.html">Back to Home</a>
+  <h1>Signals and Systems</h1>
+  <p>This page is only visible to logged-in users.</p>
+
+  <a href="#" onclick="logout()">Log Out</a>
+
+  <!-- Firebase Auth Check -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.firebasestorage.app",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("You must be logged in to view this page.");
+        window.location.href = "login.html";
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        alert("Logged out!");
+        window.location.href = "login.html";
+      });
+    }
+  </script>
 </body>
 </html>
