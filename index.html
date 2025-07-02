@@ -18,6 +18,43 @@
 <body>
   <h1>Welcome to My Blog</h1>
   <p>This is my personal page where I post articles and tutorials.</p>
+  <div class="tabs">
+    <div class="tab active" onclick="activateTab(this)">Signal</div>
+    <div class="tab" onclick="activateTab(this)">Math</div>
+    <div class="tab" onclick="activateTab(this)">Tech</div>
+  </div>
+
+  <div id="content">
+    <h2>Signal Articles</h2>
+    <p>Here you can put your signal and systems articles content.</p>
+  </div>
+
+  <script>
+    function activateTab(selectedTab) {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      selectedTab.classList.add('active');
+
+      const content = document.getElementById('content');
+      if (selectedTab.textContent === 'Signal') {
+        content.innerHTML = `
+          <h2>Signal Articles</h2>
+          <p>Here you can put your signal and systems articles content.</p>
+        `;
+      } else if (selectedTab.textContent === 'Math') {
+        content.innerHTML = `
+          <h2>Math Articles</h2>
+          <p>Here you can put your mathematics articles content.</p>
+        `;
+      } else if (selectedTab.textContent === 'Tech') {
+        content.innerHTML = `
+          <h2>Tech Articles</h2>
+          <p>Here you can put your science and technology articles content.</p>
+        `;
+      }
+    }
+  </script>
   <ul>
     <li><a href="signals.html">Signals and Systems</a></li>
     <li><a href="math.html">Mathematics</a></li>
