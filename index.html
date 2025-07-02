@@ -139,6 +139,55 @@
       color: white;
     }
 
+    /* Menu icon (three bars) */
+    #menu-icon {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #ffd700;
+      z-index: 1000;
+    }
+    
+    /* Side panel styles */
+    #side-panel {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.9);
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 60px;
+      z-index: 999;
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.6);
+    }
+    
+    #side-panel a {
+      padding: 10px 20px;
+      text-decoration: none;
+      font-size: 18px;
+      color: #ffd700;
+      display: block;
+      transition: 0.2s;
+    }
+    
+    #side-panel a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 30px;
+      color: white;
+      cursor: pointer;
+    }
+    
+
     @media (max-width: 768px) {
       .tabs {
         flex-direction: column;
@@ -160,6 +209,16 @@
   </style>
 </head>
 <body>
+  <!-- Menu Button -->
+  <div id="menu-icon" onclick="toggleMenu()">&#9776;</div>
+
+  <!-- Side Panel -->
+  <div id="side-panel">
+   <span class="close-btn" onclick="toggleMenu()">&times;</span>
+   <a href="index.html">Home Page</a>
+   <a href="about.html">About Me</a>
+  </div>
+
   <div class="topbar">
     <a href="login.html" class="signup-btn" id="loginBtn" style="display: none;">Log In</a>
     <a href="#" class="signup-btn" id="logoutBtn" style="display: none;" onclick="logout()">Log Out</a>
@@ -233,7 +292,21 @@
        window.location.href = 'tech.html';
      }
    }
-    
+
+    function toggleMenu() {
+      const panel = document.getElementById("side-panel");
+      panel.style.width = panel.style.width === "250px" ? "0" : "250px";
+    }
+  
+    // Optional: close panel if click outside
+    window.onclick = function(event) {
+      const panel = document.getElementById("side-panel");
+      const icon = document.getElementById("menu-icon");
+      if (event.target !== panel && !panel.contains(event.target) && event.target !== icon) {
+        panel.style.width = "0";
+      }
+    }
+
   </script>
 </body>
 </html>
