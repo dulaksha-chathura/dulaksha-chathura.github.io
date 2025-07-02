@@ -1,17 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Signals and Systems</title>
+  <title>Signals and Systems – Laplace Transform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    h1, h2 {
+      color: #ffd700;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background-color: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      background-color: white;
+      color: black;
+    }
+  </style>
 </head>
 <body>
-  <h1>Signals and Systems</h1>
-  <p>This page is only visible to logged-in users.</p>
+  <a href="#" class="logout" onclick="logout()">Log Out</a>
 
-  <a href="#" onclick="logout()">Log Out</a>
+  <h1>Laplace Transform – An Introduction</h1>
+  <p>
+    The Laplace Transform is a powerful integral transform used to analyze linear time-invariant systems. 
+    It converts functions from the time domain into the complex frequency domain (s-domain), making differential equations easier to solve.
+  </p>
 
-  <!-- Firebase Auth Check -->
+  <h2>Definition</h2>
+  <p>
+    The Laplace Transform of a function \( f(t) \), defined for \( t \geq 0 \), is given by:
+  </p>
+  <p>
+    \( \displaystyle \mathcal{L}\{f(t)\} = F(s) = \int_0^{\infty} f(t)e^{-st} dt \)
+  </p>
+
+  <h2>Applications</h2>
+  <ul>
+    <li>Solving linear differential equations</li>
+    <li>Modeling and analyzing electrical circuits</li>
+    <li>Control systems and signal processing</li>
+  </ul>
+
+  <h2>Common Laplace Pairs</h2>
+  <ul>
+    <li>\( \mathcal{L}\{1\} = \frac{1}{s} \)</li>
+    <li>\( \mathcal{L}\{t^n\} = \frac{n!}{s^{n+1}} \)</li>
+    <li>\( \mathcal{L}\{e^{at}\} = \frac{1}{s-a} \)</li>
+  </ul>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+
+  <!-- Firebase Config + Auth Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
@@ -22,6 +81,7 @@
       appId: "1:889626944701:web:acdf552bacc6958585c3d4",
       measurementId: "G-NGFVCDFNKZ"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
