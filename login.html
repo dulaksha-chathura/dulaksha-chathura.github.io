@@ -1,34 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>Log In</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <style>
     body {
+      font-family: Arial, sans-serif;
       text-align: center;
-      padding: 100px;
-      font-family: Arial;
+      padding: 50px;
       background-color: #111;
       color: white;
     }
-    input, button {
-      margin: 10px;
+
+    input[type="email"],
+    input[type="password"] {
       padding: 10px;
+      margin: 10px;
       width: 250px;
+      border-radius: 6px;
+      border: none;
     }
+
     button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      background-color: #ffd700;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
+      font-weight: bold;
+    }
+
+    #error {
+      color: red;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Login</h1>
+  <h2>Log In</h2>
   <input type="email" id="email" placeholder="Email"><br>
   <input type="password" id="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
+  <button onclick="login()">Log In</button>
+  <p>Don't have an account? <a href="signup.html" style="color: #ffd700;">Sign Up</a></p>
 
+  <p id="error"></p>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
@@ -40,17 +60,18 @@
       measurementId: "G-NGFVCDFNKZ"
     };
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
 
     function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
-          alert("Login successful!");
           window.location.href = "index.html";
         })
-        .catch(err => alert(err.message));
+        .catch((error) => {
+          document.getElementById("error").innerText = error.message;
+        });
     }
   </script>
 </body>
