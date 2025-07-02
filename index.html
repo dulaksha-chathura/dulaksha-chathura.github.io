@@ -119,6 +119,23 @@
       color: black;
     }
 
+    .footer {
+      margin-top: 80px;
+      padding: 30px;
+      font-size: 14px;
+      color: #ffd700;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .footer a {
+      color: #ffd700;
+      text-decoration: underline;
+    }
+
+    .footer a:hover {
+      color: white;
+    }
+
     @media (max-width: 768px) {
       .tabs {
         flex-direction: column;
@@ -147,24 +164,24 @@
   
   <h1>Welcome to My Blog</h1>
   <p>This is my personal page where I post articles and tutorials.</p>
-  
+
+  <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" onclick="activateTab(this)">Signal and Systems</div>
     <div class="tab" onclick="activateTab(this)">Advanced Mathematics</div>
     <div class="tab" onclick="activateTab(this)">Electronic and Telecommunication Engineering</div>
   </div>
-  
-  /* We still have not made the content below */
-  <div id="content">
-    <h2>Signal Articles</h2>
-    <p>Here you can put your signal and systems articles content.</p>
-  </div>
 
-  <ul>
-   <li><a href="signals.html">Signals and Systems</a></li>
-   <li><a href="math.html">Advanced Mathematics</a></li>
-   <li><a href="tech.html">Electronic and Telecommunication engineering</a></li>
-  </ul>
+  <!-- Footer -->
+  <div class="footer">
+    <p>
+      This site is optimized for learning and sharing ideas about signals, math, and technology. Content may be simplified to focus on understanding. 
+      By using this site, you agree to the <a href="#">terms of use</a> and <a href="#">privacy policy</a>.
+    </p>
+    <p>
+      &copy; 2025 Dulaksha Chathura. All rights reserved. Site is inspired by modern educational platforms.
+    </p>
+  </div>
   
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
