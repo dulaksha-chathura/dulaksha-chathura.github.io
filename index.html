@@ -14,6 +14,30 @@
      text-align: center;
      padding-top: 100px;
      }
+    
+    .topbar {
+     position: absolute;
+     top: 20px;
+     right: 30px;
+     z-index: 10;
+     }
+
+    .signup-btn {
+     background-color: transparent;
+     border: 2px solid white;
+     padding: 10px 20px;
+     color: white;
+     text-decoration: none;
+     border-radius: 8px;
+     margin-left: 10px;
+     transition: 0.3s ease;
+     }
+
+    .signup-btn:hover {
+     background-color: white;
+     color: black;
+     }
+    
     a { color: #ffd700; }
     a:hover {
       text-decoration: underline;
@@ -116,9 +140,8 @@
 </head>
 <body>
   <div class="topbar">
-    <a href="signup.html" class="signup-btn">Sign Up</a>
-    <a href="login.html" class="signup-btn">Log In</a>
-    <a href="#" class="signup-btn" onclick="logout()">Log Out</a>
+    <a href="login.html" class="signup-btn" id="loginBtn" style="display: none;">Log In</a>
+    <a href="#" class="signup-btn" id="logoutBtn" style="display: none;" onclick="logout()">Log Out</a>
   </div>
   <h1>Welcome to My Blog</h1>
   <p>This is my personal page where I post articles and tutorials.</p>
@@ -133,6 +156,12 @@
     <p>Here you can put your signal and systems articles content.</p>
   </div>
 
+  <ul>
+   <li><a href="signals.html">Signals and Systems</a></li>
+   <li><a href="math.html">Advanced Mathematics</a></li>
+   <li><a href="tech.html">Electronic and Telecommunication engineering</a></li>
+  </ul>
+  
   <script>
     function activateTab(selectedTab) {
       document.querySelectorAll('.tab').forEach(tab => {
@@ -160,11 +189,6 @@
     }
   </script>
 
-  <ul>
-    <li><a href="signals.html">Signals and Systems</a></li>
-    <li><a href="math.html">Mathematics</a></li>
-    <li><a href="tech.html">Science and Technology</a></li>
-  </ul>
 </body>
 </html>
 
