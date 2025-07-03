@@ -256,6 +256,10 @@
     }
 
     function renderComment(comment, replies, currentUserId) {
+      const likeCount = comment.likeCount || 0;
+      const dislikeCount = comment.dislikeCount || 0;
+      const userReaction = comment.userReaction || null; // 'like', 'dislike' or null
+    
       return `
         <div class="comment">
           <div class="comment-header">
@@ -269,6 +273,19 @@
           </div>
           <div>${comment.text}</div>
           <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
+          
+          <div>
+            <button 
+              class="like-btn" 
+              style="color: ${userReaction === 'like' ? 'green' : 'black'}" 
+              onclick="toggleReaction('${comment.id}', 'like')">👍 ${likeCount}</button>
+            
+            <button 
+              class="dislike-btn" 
+              style="color: ${userReaction === 'dislike' ? 'red' : 'black'}" 
+              onclick="toggleReaction('${comment.id}', 'dislike')">👎 ${dislikeCount}</button>
+          </div>
+    
           <div id="replies-${comment.id}" class="reply-box">
             ${replies.map(r => renderComment(r, [], currentUserId)).join('')}
           </div>
@@ -279,9 +296,28 @@
     async function loadComments() {
       const snapshot = await db.collection("comments").orderBy("timestamp").get();
       const comments = [];
-      snapshot.forEach(doc => {
-        comments.push({ id: doc.id, ...doc.data() });
-      });
+      for (const doc of snapshot.docs) {
+        const commentData = doc.data();
+        commentData.id = doc.id;
+    
+        // Fetch reactions subcollection for this comment
+        const reactionsSnap = await db.collection("comments").doc(doc.id).collection("reactions").get();
+    
+        // Count likes, dislikes, and find user's reaction
+        let likeCount = 0, dislikeCount = 0, userReaction = null;
+        reactionsSnap.forEach(rDoc => {
+          const reaction = rDoc.data();
+          if (reaction.type === 'like') likeCount++;
+          else if (reaction.type === 'dislike') dislikeCount++;
+          if (rDoc.id === currentUser.uid) userReaction = reaction.type;
+        });
+    
+        commentData.likeCount = likeCount;
+        commentData.dislikeCount = dislikeCount;
+        commentData.userReaction = userReaction;
+    
+        comments.push(commentData);
+      }
     
       const parentMap = {};
       comments.forEach(c => {
@@ -297,6 +333,32 @@
         .join('');
     
       document.getElementById("comments-list").innerHTML = html || "No comments yet.";
+    }
+
+    async function toggleReaction(commentId, reactionType) {
+      if (!currentUser) {
+        alert("You must be logged in to react.");
+        return;
+      }
+    
+      const reactionRef = db.collection("comments").doc(commentId).collection("reactions").doc(currentUser.uid);
+      const doc = await reactionRef.get();
+    
+      if (doc.exists) {
+        const currentType = doc.data().type;
+        if (currentType === reactionType) {
+          // Same reaction clicked, remove reaction
+          await reactionRef.delete();
+        } else {
+          // Different reaction, update it
+          await reactionRef.set({ type: reactionType });
+        }
+      } else {
+        // No reaction yet, add one
+        await reactionRef.set({ type: reactionType });
+      }
+    
+      loadComments();
     }
   </script>
 </body>
