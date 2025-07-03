@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Signals and Systems – Laplace Transform</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -37,6 +38,90 @@
     .logout:hover {
       background-color: white;
       color: black;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      border-left: 4px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    #comments-list {
+      margin-top: 20px;
+    }
+    .comment {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: flex-start;
+    }
+    .comment img {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    .comment-content {
+      flex: 1;
+    }
+    #comment-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      resize: vertical;
+    }
+    #comment-form button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #profile-modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 1000;
+      display: none;
+      max-width: 300px;
+      width: 90%;
+    }
+    #profile-modal input[type="text"],
+    #profile-modal input[type="file"],
+    #profile-modal input[type="email"],
+    #profile-modal input[type="password"] {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    #profile-modal input[disabled] {
+      background: #eee;
+    }
+    #profile-modal button {
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Overlay for modal */
+    #modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
+    #profile-warning {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 15px;
     }
   </style>
   <script>
@@ -85,9 +170,32 @@
     <li>\( \mathcal{L}\{e^{at}\} = \frac{1}{s-a} \)</li>
   </ul>
 
-  <!-- Firebase SDKs -->
+  <div class="container">
+    <h2>Comments</h2>
+    <div id="profile-warning" style="display:none;">You must complete your profile before commenting.</div>
+    <div id="comments-list"></div>
+
+    <div id="comment-form">
+      <textarea id="comment-input" placeholder="Write a comment..." rows="4" disabled></textarea><br />
+      <button onclick="submitComment()" disabled>Post Comment</button>
+    </div>
+  </div>
+
+  <!-- Profile Setup Modal -->
+  <div id="modal-overlay"></div>
+  <div id="profile-modal">
+    <h3>Complete Your Profile</h3>
+    <input type="text" id="profile-name" placeholder="Full Name" required />
+    <input type="file" id="profile-pic" accept="image/*" />
+    <input type="email" id="profile-email" disabled />
+    <input type="password" id="profile-password" disabled />
+    <button onclick="saveProfile()">Save Profile</button>
+  </div>
+
+  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 
   <!-- Firebase Config + Auth Logic -->
   <script>
@@ -115,6 +223,168 @@
       auth.signOut().then(() => {
         alert("Logged out!");
         window.location.href = "login.html";
+      });
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.appspot.com",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const profileModal = document.getElementById('profile-modal');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const profileWarning = document.getElementById('profile-warning');
+    const commentInput = document.getElementById('comment-input');
+    const commentButton = document.querySelector('#comment-form button');
+
+    function showProfileModal() {
+      profileModal.style.display = 'block';
+      modalOverlay.style.display = 'block';
+    }
+    function hideProfileModal() {
+      profileModal.style.display = 'none';
+      modalOverlay.style.display = 'none';
+    }
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        alert("You must be logged in to comment.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      // Autofill email & password fields (password masked)
+      document.getElementById('profile-email').value = user.email;
+      document.getElementById('profile-password').value = "********";
+
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        // No profile yet - disable comment box and show modal + warning
+        commentInput.disabled = true;
+        commentButton.disabled = true;
+        profileWarning.style.display = "block";
+        showProfileModal();
+      } else {
+        // Profile exists - enable comment form and hide warning/modal
+        profileWarning.style.display = "none";
+        hideProfileModal();
+        commentInput.disabled = false;
+        commentButton.disabled = false;
+        loadComments();
+      }
+    });
+
+    async function saveProfile() {
+      const name = document.getElementById('profile-name').value.trim();
+      const picFile = document.getElementById('profile-pic').files[0];
+      if (!name) {
+        alert('Please enter your full name');
+        return;
+      }
+
+      let imageBase64 = "";
+      if (picFile) {
+        imageBase64 = await fileToBase64(picFile);
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert('User not logged in');
+        return;
+      }
+
+      await db.collection('users').doc(user.uid).set({
+        name: name,
+        email: user.email,
+        imageBase64: imageBase64
+      });
+
+      hideProfileModal();
+      profileWarning.style.display = "none";
+      commentInput.disabled = false;
+      commentButton.disabled = false;
+      loadComments();
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitComment() {
+      const text = commentInput.value.trim();
+      if (!text) {
+        alert('Comment cannot be empty');
+        return;
+      }
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be logged in");
+        return;
+      }
+
+      await db.collection('comments').add({
+        uid: user.uid,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      commentInput.value = '';
+      loadComments();
+    }
+
+    async function loadComments() {
+      const commentsSnapshot = await db.collection('comments').orderBy('timestamp', 'desc').get();
+      const usersSnapshot = await db.collection('users').get();
+
+      const usersMap = {};
+      usersSnapshot.forEach(doc => {
+        usersMap[doc.id] = doc.data();
+      });
+
+      const list = document.getElementById('comments-list');
+      list.innerHTML = '';
+
+      commentsSnapshot.forEach(doc => {
+        const comment = doc.data();
+        const user = usersMap[comment.uid] || { name: 'Unknown', imageBase64: '' };
+        const imgSrc = user.imageBase64 || 'https://via.placeholder.com/40?text=?';
+
+        const div = document.createElement('div');
+        div.classList.add('comment');
+        div.innerHTML = `
+          <img src="${imgSrc}" alt="Profile pic" />
+          <div class="comment-content">
+            <strong>${escapeHtml(user.name)}</strong><br />
+            <span>${escapeHtml(comment.text)}</span>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    // Simple HTML escape function
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
       });
     }
   </script>
