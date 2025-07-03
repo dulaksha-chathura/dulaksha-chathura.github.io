@@ -47,107 +47,60 @@
       border-left: 4px solid #ccc;
       border-radius: 8px;
       padding: 20px;
+      color: #000;
     }
+
     #comments-list {
       margin-top: 20px;
     }
+
     .comment {
       margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      align-items: flex-start;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background-color: #f9f9f9;
     }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
     .comment img {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       margin-right: 10px;
-      object-fit: cover;
     }
-    .comment-content {
-      flex: 1;
+
+    .comment .name {
+      font-weight: bold;
     }
-    #comment-input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      resize: vertical;
-    }
-    #comment-form button {
+
+    .reply-box {
       margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
+      margin-left: 40px;
+    }
+
+    .reply-btn, .like-btn {
+      margin-top: 8px;
       cursor: pointer;
-    }
-    #profile-modal {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border: 2px solid #333;
-      border-radius: 8px;
-      padding: 20px;
-      z-index: 1000;
-      display: none;
-      max-width: 300px;
-      width: 90%;
-    }
-    #profile-modal input[type="text"],
-    #profile-modal input[type="file"],
-    #profile-modal input[type="email"],
-    #profile-modal input[type="password"] {
-      width: 100%;
-      margin-bottom: 12px;
-      padding: 8px;
-      font-size: 14px;
-    }
-    #profile-modal input[disabled] {
-      background: #eee;
-    }
-    #profile-modal button {
-      padding: 10px;
-      width: 100%;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    /* Overlay for modal */
-    #modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      display: none;
-    }
-    #profile-warning {
-      color: red;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-    #close-modal {
-      background: transparent;
+      background: none;
       border: none;
-      color: #333;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #close-modal:hover {
-      color: red;
+      color: #007bff;
+      font-size: 14px;
+      text-decoration: underline;
     }
   </style>
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-      svg: { fontCache: 'global' }
-    };
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
 <body>
   <a href="#" class="logout" onclick="logout()">Log Out</a>
-
   <h1>Laplace Transform – An Introduction</h1>
   <p>
-    The Laplace Transform is a powerful integral transform used to analyze linear time-invariant systems. 
+    The Laplace Transform is a powerful integral transform used to analyze linear time-invariant systems.
     It converts functions from the time domain into the complex frequency domain (s-domain), making differential equations easier to solve.
     I found a very helpful book that covers both the Laplace Transform and Fourier Transform in depth.
     You can access it here:
@@ -155,7 +108,7 @@
       View Book (PDF)
     </a>
   </p>
-  
+
   <h2>Definition</h2>
   <p>
     The Laplace Transform of a function \( f(t) \), defined for \( t \geq 0 \), is given by:
@@ -165,14 +118,14 @@
       \mathcal{L}\{f(t)\} = F(s) = \int_0^{\infty} f(t)e^{-st} \, dt
     \]
   </p>
-  
+
   <h2>Applications</h2>
   <ul>
     <li>Solving linear differential equations</li>
     <li>Modeling and analyzing electrical circuits</li>
     <li>Control systems and signal processing</li>
   </ul>
-  
+
   <h2>Common Laplace Pairs</h2>
   <ul>
     <li>\( \mathcal{L}\{1\} = \frac{1}{s} \)</li>
@@ -182,53 +135,23 @@
 
   <div class="container">
     <h2>Comments</h2>
-    <div id="profile-warning" style="display:none;">You must complete your profile before commenting.</div>
-    <div id="comments-list"></div>
-
-    <div id="comment-form">
-      <textarea id="comment-input" placeholder="Write a comment..." rows="4" disabled></textarea><br />
-      <button onclick="submitComment()" disabled>Post Comment</button>
-    </div>
+    <div id="comments-list">Loading comments...</div>
+    <textarea id="comment-input" placeholder="Write a comment..." rows="3"></textarea><br />
+    <button onclick="submitComment()">Post Comment</button>
   </div>
 
-  <!-- Profile Setup Modal -->
-  <div id="modal-overlay"></div>
-  <div id="profile-modal">
-    <button id="close-modal" style="float: right; font-size: 16px;">&times;</button>
-    <h3>Complete Your Profile</h3>
-    <input type="text" id="profile-name" placeholder="Full Name" required />
-    <input type="file" id="profile-pic" accept="image/*" />
-    <input type="email" id="profile-email" disabled />
-    <input type="password" id="profile-password" disabled />
-    <button onclick="saveProfile()">Save Profile</button>
-  </div>
-
-  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
-
-  <!-- Firebase Config + Auth Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
       authDomain: "project1-aa092.firebaseapp.com",
       projectId: "project1-aa092",
-      storageBucket: "project1-aa092.firebasestorage.app",
-      messagingSenderId: "889626944701",
-      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
-      measurementId: "G-NGFVCDFNKZ"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
-    const profileModal = document.getElementById('profile-modal');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const profileWarning = document.getElementById('profile-warning');
-    const commentInput = document.getElementById('comment-input');
-    const commentButton = document.querySelector('#comment-form button');
 
     function logout() {
       auth.signOut().then(() => {
@@ -237,153 +160,75 @@
       });
     }
 
-    function showProfileModal() {
-      profileModal.style.display = 'block';
-      modalOverlay.style.display = 'block';
-    }
-
-    function hideProfileModal() {
-      profileModal.style.display = 'none';
-      modalOverlay.style.display = 'none';
-    }
-
-    auth.onAuthStateChanged(async user => {
+    auth.onAuthStateChanged(user => {
       if (!user) {
         alert("You must be logged in to view this page.");
         window.location.href = "login.html";
         return;
       }
-
-      // Autofill email & password fields (password masked)
-      document.getElementById('profile-email').value = user.email;
-      document.getElementById('profile-password').value = "********";
-
-      const userDoc = await db.collection('users').doc(user.uid).get();
-      if (!userDoc.exists) {
-        // No profile yet - disable comment box and show modal + warning
-        commentInput.disabled = true;
-        commentButton.disabled = true;
-        profileWarning.style.display = "block";
-        showProfileModal();
-      } else {
-        // Profile exists - enable comment form and hide warning/modal
-        profileWarning.style.display = "none";
-        hideProfileModal();
-        commentInput.disabled = false;
-        commentButton.disabled = false;
-        loadComments();
-      }
+      loadComments();
     });
 
-    async function saveProfile() {
-      const name = document.getElementById('profile-name').value.trim();
-      const picFile = document.getElementById('profile-pic').files[0];
-      if (!name) {
-        alert('Please enter your full name');
-        return;
-      }
-
-      let imageBase64 = "";
-      if (picFile) {
-        imageBase64 = await fileToBase64(picFile);
-      }
-
+    async function submitComment(parentId = null) {
+      const input = parentId ? document.getElementById(`reply-input-${parentId}`) : document.getElementById("comment-input");
+      const text = input.value.trim();
+      if (!text) return;
       const user = auth.currentUser;
-      if (!user) {
-        alert('User not logged in');
-        return;
-      }
-
-      await db.collection('users').doc(user.uid).set({
-        name: name,
-        email: user.email,
-        imageBase64: imageBase64
-      });
-
-      hideProfileModal();
-      profileWarning.style.display = "none";
-      commentInput.disabled = false;
-      commentButton.disabled = false;
-      loadComments();
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function submitComment() {
-      const text = commentInput.value.trim();
-      if (!text) {
-        alert('Comment cannot be empty');
-        return;
-      }
-      
-      const user = auth.currentUser;
-      if (!user) {
-        alert("You must be logged in");
-        return;
-      }
-
-      await db.collection('comments').add({
+      const userDoc = await db.collection("users").doc(user.uid).get();
+      const profile = userDoc.data();
+      await db.collection("comments").add({
         uid: user.uid,
-        text: text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        name: profile.name,
+        imageBase64: profile.imageBase64,
+        parent: parentId || null
       });
+      input.value = "";
+    }
 
-      commentInput.value = '';
-      await loadComments();
+    function replyToComment(id) {
+      const div = document.getElementById(`replies-${id}`);
+      if (!div.querySelector('textarea')) {
+        div.innerHTML += `
+          <textarea id="reply-input-${id}" rows="2"></textarea><br />
+          <button onclick="submitComment('${id}')">Reply</button>
+        `;
+      }
+    }
+
+    function renderComment(comment, replies) {
+      return `
+        <div class="comment">
+          <div class="comment-header">
+            <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" />
+            <div class="name">${comment.name || 'Anonymous'}</div>
+          </div>
+          <div>${comment.text}</div>
+          <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
+          <div id="replies-${comment.id}" class="reply-box">
+            ${replies.map(r => renderComment(r, [])).join('')}
+          </div>
+        </div>
+      `;
     }
 
     async function loadComments() {
-      const commentsSnapshot = await db.collection('comments').orderBy('timestamp', 'desc').get();
-      const usersSnapshot = await db.collection('users').get();
-
-      const usersMap = {};
-      usersSnapshot.forEach(doc => {
-        usersMap[doc.id] = doc.data();
+      const snapshot = await db.collection("comments").orderBy("timestamp").get();
+      const comments = [];
+      snapshot.forEach(doc => {
+        comments.push({ id: doc.id, ...doc.data() });
       });
-
-      const list = document.getElementById('comments-list');
-      list.innerHTML = '';
-
-      commentsSnapshot.forEach(doc => {
-        const comment = doc.data();
-        const user = usersMap[comment.uid] || { name: 'Unknown', imageBase64: '' };
-        const imgSrc = user.imageBase64 || 'https://via.placeholder.com/40?text=?';
-
-        const div = document.createElement('div');
-        div.classList.add('comment');
-        div.innerHTML = `
-          <img src="${imgSrc}" alt="Profile pic" />
-          <div class="comment-content">
-            <strong>${escapeHtml(user.name)}</strong><br />
-            <span>${escapeHtml(comment.text)}</span>
-          </div>
-        `;
-        list.appendChild(div);
+      const parentMap = {};
+      comments.forEach(c => {
+        if (c.parent) {
+          parentMap[c.parent] = parentMap[c.parent] || [];
+          parentMap[c.parent].push(c);
+        }
       });
+      const html = comments.filter(c => !c.parent).map(c => renderComment(c, parentMap[c.id] || [])).join('');
+      document.getElementById("comments-list").innerHTML = html || "No comments yet.";
     }
-
-    // Simple HTML escape function
-    function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, function(m) {
-        return ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        })[m];
-      });
-    }
-    document.getElementById("close-modal").addEventListener("click", () => {
-      hideProfileModal();
-    });
   </script>
 </body>
 </html>
