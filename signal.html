@@ -256,34 +256,36 @@
     }
 
     function renderComment(comment, replies, currentUserId) {
-      // Determine if user liked/disliked this comment
-      const userLiked = comment.userReaction === "like";
-      const userDisliked = comment.userReaction === "dislike";
+      // Determine if current user liked/disliked this comment
+      const userReaction = comment.userReaction || null; // you must provide this info in your loadComments function
+    
+      // Button styles: add a class if active
+      const likeActiveClass = userReaction === 'like' ? 'active-reaction' : '';
+      const dislikeActiveClass = userReaction === 'dislike' ? 'active-reaction' : '';
     
       return `
         <div class="comment">
-          <div class="comment-header" style="gap: 10px;">
-            <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" />
+          <div class="comment-header" style="display:flex; align-items:center; gap:10px;">
+            <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" alt="Profile pic" />
             <div class="name">${comment.name || 'Anonymous'}</div>
+    
             ${
               comment.uid === currentUserId 
                 ? `<button class="delete-btn" onclick="deleteComment('${comment.id}')">Delete</button>` 
                 : ''
             }
           </div>
-          <div>${escapeHtml(comment.text)}</div>
     
-          <div style="margin-top: 6px; display: flex; align-items: center; gap: 15px;">
-            <button class="like-btn" 
-              style="color: ${userLiked ? 'green' : '#007bff'};"
-              onclick="toggleReaction('${comment.id}', 'like')">
+          <div>${comment.text}</div>
+    
+          <div style="margin-top:8px;">
+            <button class="like-btn ${likeActiveClass}" onclick="toggleReaction('${comment.id}', 'like')">
               👍 ${comment.likeCount || 0}
             </button>
-            <button class="dislike-btn" 
-              style="color: ${userDisliked ? 'red' : '#007bff'};"
-              onclick="toggleReaction('${comment.id}', 'dislike')">
+            <button class="dislike-btn ${dislikeActiveClass}" onclick="toggleReaction('${comment.id}', 'dislike')">
               👎 ${comment.dislikeCount || 0}
             </button>
+    
             <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
           </div>
     
