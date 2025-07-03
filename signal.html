@@ -255,17 +255,22 @@
       }
     }
 
-    function renderComment(comment, replies) {
+    function renderComment(comment, replies, currentUserId) {
       return `
         <div class="comment">
           <div class="comment-header">
             <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" />
             <div class="name">${comment.name || 'Anonymous'}</div>
+            ${
+              comment.uid === currentUserId 
+                ? `<button class="delete-btn" onclick="deleteComment('${comment.id}')">Delete</button>` 
+                : ''
+            }
           </div>
           <div>${comment.text}</div>
           <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
           <div id="replies-${comment.id}" class="reply-box">
-            ${replies.map(r => renderComment(r, [])).join('')}
+            ${replies.map(r => renderComment(r, [], currentUserId)).join('')}
           </div>
         </div>
       `;
@@ -277,6 +282,7 @@
       snapshot.forEach(doc => {
         comments.push({ id: doc.id, ...doc.data() });
       });
+    
       const parentMap = {};
       comments.forEach(c => {
         if (c.parent) {
@@ -284,7 +290,12 @@
           parentMap[c.parent].push(c);
         }
       });
-      const html = comments.filter(c => !c.parent).map(c => renderComment(c, parentMap[c.id] || [])).join('');
+    
+      const html = comments
+        .filter(c => !c.parent)
+        .map(c => renderComment(c, parentMap[c.id] || [], currentUser.uid))
+        .join('');
+    
       document.getElementById("comments-list").innerHTML = html || "No comments yet.";
     }
   </script>
