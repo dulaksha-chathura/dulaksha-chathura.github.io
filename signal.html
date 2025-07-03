@@ -22,9 +22,15 @@
       color: #ffd700;
     }
 
-    .logout, .profile-btn {
+    .header-buttons {
       position: absolute;
       top: 20px;
+      right: 30px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .logout, .profile-btn {
       background-color: transparent;
       border: 2px solid white;
       color: white;
@@ -33,15 +39,7 @@
       text-decoration: none;
       cursor: pointer;
     }
-
-    .logout {
-      right: 90px;
-    }
-
-    .profile-btn {
-      right: 30px;
-    }
-
+    
     .logout:hover, .profile-btn:hover {
       background-color: white;
       color: black;
@@ -140,7 +138,11 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
 <body>
-  <a href="#" class="logout" onclick="logout()">Log Out</a>
+  <div class="header-buttons">
+    <a href="#" class="logout" onclick="logout()">Log Out</a>
+    <a href="#" class="profile-btn" onclick="toggleProfileSidebar()">Profile</a>
+  </div>
+
   <h1>Laplace Transform – An Introduction</h1>
   <p>
     The Laplace Transform is a powerful integral transform used to analyze linear time-invariant systems.
