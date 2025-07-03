@@ -123,6 +123,16 @@
       font-weight: bold;
       margin-bottom: 15px;
     }
+    #close-modal {
+      background: transparent;
+      border: none;
+      color: #333;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #close-modal:hover {
+      color: red;
+    }
   </style>
   <script>
     window.MathJax = {
@@ -184,6 +194,7 @@
   <!-- Profile Setup Modal -->
   <div id="modal-overlay"></div>
   <div id="profile-modal">
+    <button id="close-modal" style="float: right; font-size: 16px;">&times;</button>
     <h3>Complete Your Profile</h3>
     <input type="text" id="profile-name" placeholder="Full Name" required />
     <input type="file" id="profile-pic" accept="image/*" />
@@ -370,6 +381,9 @@
         })[m];
       });
     }
+    document.getElementById("close-modal").addEventListener("click", () => {
+      hideProfileModal();
+    });
   </script>
 </body>
 </html>
