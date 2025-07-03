@@ -294,45 +294,58 @@
     }
 
     async function loadComments() {
-      const snapshot = await db.collection("comments").orderBy("timestamp").get();
-      const comments = [];
-      for (const doc of snapshot.docs) {
-        const commentData = doc.data();
-        commentData.id = doc.id;
+      try {
+        const snapshot = await db.collection("comments").orderBy("timestamp").get();
     
-        // Fetch reactions subcollection for this comment
-        const reactionsSnap = await db.collection("comments").doc(doc.id).collection("reactions").get();
+        // Fetch all reactions in parallel
+        const reactionPromises = snapshot.docs.map(doc =>
+          db.collection("comments").doc(doc.id).collection("reactions").get()
+        );
+        const reactionsSnapshots = await Promise.all(reactionPromises);
     
-        // Count likes, dislikes, and find user's reaction
-        let likeCount = 0, dislikeCount = 0, userReaction = null;
-        reactionsSnap.forEach(rDoc => {
-          const reaction = rDoc.data();
-          if (reaction.type === 'like') likeCount++;
-          else if (reaction.type === 'dislike') dislikeCount++;
-          if (rDoc.id === currentUser.uid) userReaction = reaction.type;
+        const comments = [];
+    
+        snapshot.docs.forEach((doc, idx) => {
+          const commentData = doc.data();
+          commentData.id = doc.id;
+    
+          const reactionsSnap = reactionsSnapshots[idx];
+          let likeCount = 0, dislikeCount = 0, userReaction = null;
+    
+          reactionsSnap.forEach(rDoc => {
+            const reaction = rDoc.data();
+            if (reaction.type === 'like') likeCount++;
+            else if (reaction.type === 'dislike') dislikeCount++;
+            if (rDoc.id === currentUser.uid) userReaction = reaction.type;
+          });
+    
+          commentData.likeCount = likeCount;
+          commentData.dislikeCount = dislikeCount;
+          commentData.userReaction = userReaction;
+    
+          comments.push(commentData);
         });
     
-        commentData.likeCount = likeCount;
-        commentData.dislikeCount = dislikeCount;
-        commentData.userReaction = userReaction;
+        // Group replies by parent comment ID
+        const parentMap = {};
+        comments.forEach(c => {
+          if (c.parent) {
+            parentMap[c.parent] = parentMap[c.parent] || [];
+            parentMap[c.parent].push(c);
+          }
+        });
     
-        comments.push(commentData);
+        const html = comments
+          .filter(c => !c.parent)
+          .map(c => renderComment(c, parentMap[c.id] || [], currentUser.uid))
+          .join('');
+    
+        document.getElementById("comments-list").innerHTML = html || "No comments yet.";
+    
+      } catch (err) {
+        console.error("Failed to load comments:", err);
+        document.getElementById("comments-list").innerHTML = "Failed to load comments.";
       }
-    
-      const parentMap = {};
-      comments.forEach(c => {
-        if (c.parent) {
-          parentMap[c.parent] = parentMap[c.parent] || [];
-          parentMap[c.parent].push(c);
-        }
-      });
-    
-      const html = comments
-        .filter(c => !c.parent)
-        .map(c => renderComment(c, parentMap[c.id] || [], currentUser.uid))
-        .join('');
-    
-      document.getElementById("comments-list").innerHTML = html || "No comments yet.";
     }
 
     async function toggleReaction(commentId, reactionType) {
