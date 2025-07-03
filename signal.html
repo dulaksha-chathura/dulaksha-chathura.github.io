@@ -136,7 +136,7 @@
   <div class="container">
     <h2>Comments</h2>
     <div id="comments-list">Loading comments...</div>
-    <textarea id="comment-input" placeholder="Write a comment..." rows="3"></textarea><br />
+    <textarea id="comment-input" placeholder="Write a comment..." rows="3" onclick="ensureProfile()"></textarea><br />
     <button onclick="submitComment()">Post Comment</button>
   </div>
 
@@ -152,6 +152,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    let currentUserProfile = null;
 
     function logout() {
       auth.signOut().then(() => {
@@ -160,34 +161,49 @@
       });
     }
 
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
       if (!user) {
         alert("You must be logged in to view this page.");
         window.location.href = "login.html";
         return;
       }
-      loadComments();
+      const doc = await db.collection("users").doc(user.uid).get();
+      currentUserProfile = doc.exists ? doc.data() : null;
+      if (!currentUserProfile) {
+        alert("Please complete your profile before commenting or replying.");
+        window.location.href = "profile.html"; // create this page for profile setup
+      } else {
+        loadComments();
+      }
     });
 
+    function ensureProfile() {
+      if (!currentUserProfile) {
+        alert("Please complete your profile before commenting or replying.");
+        window.location.href = "profile.html";
+      }
+    }
+
     async function submitComment(parentId = null) {
+      if (!currentUserProfile) return ensureProfile();
       const input = parentId ? document.getElementById(`reply-input-${parentId}`) : document.getElementById("comment-input");
       const text = input.value.trim();
       if (!text) return;
       const user = auth.currentUser;
-      const userDoc = await db.collection("users").doc(user.uid).get();
-      const profile = userDoc.data();
       await db.collection("comments").add({
         uid: user.uid,
         text,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        name: profile.name,
-        imageBase64: profile.imageBase64,
+        name: currentUserProfile.name,
+        imageBase64: currentUserProfile.imageBase64,
         parent: parentId || null
       });
       input.value = "";
+      loadComments();
     }
 
     function replyToComment(id) {
+      ensureProfile();
       const div = document.getElementById(`replies-${id}`);
       if (!div.querySelector('textarea')) {
         div.innerHTML += `
