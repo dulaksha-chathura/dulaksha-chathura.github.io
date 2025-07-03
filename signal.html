@@ -93,6 +93,27 @@
       font-size: 14px;
       text-decoration: underline;
     }
+
+    #profile-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    #modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 </head>
@@ -136,8 +157,14 @@
   <div class="container">
     <h2>Comments</h2>
     <div id="comments-list">Loading comments...</div>
-    <textarea id="comment-input" placeholder="Write a comment..." rows="3" onclick="ensureProfile()"></textarea><br />
+    <textarea id="comment-input" placeholder="Write a comment..." rows="3" onclick="ensureProfileComplete()"></textarea><br />
     <button onclick="submitComment()">Post Comment</button>
+  </div>
+
+  <div id="modal-overlay"></div>
+  <div id="profile-modal">
+    <p>Please complete your profile to post comments or replies.</p>
+    <button onclick="closeProfileModal()">Close</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
@@ -152,7 +179,9 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    let currentUserProfile = null;
+
+    let currentUser = null;
+    let currentProfile = null;
 
     function logout() {
       auth.signOut().then(() => {
@@ -161,41 +190,47 @@
       });
     }
 
+    function showProfileModal() {
+      document.getElementById("modal-overlay").style.display = "block";
+      document.getElementById("profile-modal").style.display = "block";
+    }
+
+    function closeProfileModal() {
+      document.getElementById("modal-overlay").style.display = "none";
+      document.getElementById("profile-modal").style.display = "none";
+    }
+
+    function ensureProfileComplete() {
+      if (!currentProfile || !currentProfile.name) {
+        showProfileModal();
+        return false;
+      }
+      return true;
+    }
+
     auth.onAuthStateChanged(async user => {
       if (!user) {
         alert("You must be logged in to view this page.");
         window.location.href = "login.html";
         return;
       }
-      const doc = await db.collection("users").doc(user.uid).get();
-      currentUserProfile = doc.exists ? doc.data() : null;
-      if (!currentUserProfile) {
-        alert("Please complete your profile before commenting or replying.");
-        window.location.href = "profile.html"; // create this page for profile setup
-      } else {
-        loadComments();
-      }
+      currentUser = user;
+      const profileSnap = await db.collection("users").doc(user.uid).get();
+      currentProfile = profileSnap.data();
+      loadComments();
     });
 
-    function ensureProfile() {
-      if (!currentUserProfile) {
-        alert("Please complete your profile before commenting or replying.");
-        window.location.href = "profile.html";
-      }
-    }
-
     async function submitComment(parentId = null) {
-      if (!currentUserProfile) return ensureProfile();
+      if (!ensureProfileComplete()) return;
       const input = parentId ? document.getElementById(`reply-input-${parentId}`) : document.getElementById("comment-input");
       const text = input.value.trim();
       if (!text) return;
-      const user = auth.currentUser;
       await db.collection("comments").add({
-        uid: user.uid,
+        uid: currentUser.uid,
         text,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        name: currentUserProfile.name,
-        imageBase64: currentUserProfile.imageBase64,
+        name: currentProfile.name,
+        imageBase64: currentProfile.imageBase64 || '',
         parent: parentId || null
       });
       input.value = "";
@@ -203,7 +238,7 @@
     }
 
     function replyToComment(id) {
-      ensureProfile();
+      if (!ensureProfileComplete()) return;
       const div = document.getElementById(`replies-${id}`);
       if (!div.querySelector('textarea')) {
         div.innerHTML += `
