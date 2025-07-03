@@ -107,6 +107,21 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
 
+    #profile-sidebar {
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 300px;
+      overflow-y: auto;
+      display: none;
+      position: fixed;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      z-index: 1001;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
     #modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -163,8 +178,24 @@
 
   <div id="modal-overlay"></div>
   <div id="profile-modal">
-    <p>Please complete your profile to post comments or replies.</p>
-    <button onclick="closeProfileModal()">Close</button>
+    <h3>Please complete your profile to post comments or replies.</h3>
+    <input id="profile-name" placeholder="Name" required><br><br>
+    <input id="profile-email" readonly><br><br>
+    <input id="profile-password" readonly><br><br>
+    <input type="file" id="profile-image" accept="image/*"><br><br>
+    <button onclick="saveProfile()">Save Profile</button>
+    <button onclick="closeProfileModal()">Cancel</button>
+  </div>
+
+  <div id="profile-sidebar">
+    <h3>Your Profile</h3>
+    <img id="sidebar-photo" style="width:100px;height:100px;border-radius:50%;"><br><br>
+    <input id="sidebar-name" placeholder="Name"><br><br>
+    <input id="sidebar-email" readonly><br><br>
+    <input id="sidebar-password" readonly><br><br>
+    <input type="file" id="sidebar-photo-input"><br><br>
+    <button onclick="updateProfile()">Update</button>
+    <button onclick="closeProfileSidebar()">Close</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
@@ -215,10 +246,77 @@
         return;
       }
       currentUser = user;
+      document.getElementById("profile-email").value = user.email;
+      document.getElementById("profile-password").value = "********";
+      document.getElementById("sidebar-email").value = user.email;
+      document.getElementById("sidebar-password").value = "********";
+      
       const profileSnap = await db.collection("users").doc(user.uid).get();
       currentProfile = profileSnap.data();
+      if (!currentProfile || !currentProfile.name) showProfileModal();
+      else {
+        document.getElementById("sidebar-name").value = currentProfile.name;
+        document.getElementById("sidebar-photo").src = currentProfile.imageBase64 || "https://via.placeholder.com/100";
+      }
       loadComments();
     });
+
+    function toggleProfileSidebar() {
+      document.getElementById("profile-sidebar").style.display = "block";
+      document.getElementById("modal-overlay").style.display = "block";
+    }
+
+    function closeProfileSidebar() {
+      document.getElementById("profile-sidebar").style.display = "none";
+      document.getElementById("modal-overlay").style.display = "none";
+    }
+
+    function showProfileModal() {
+      document.getElementById("modal-overlay").style.display = "block";
+      document.getElementById("profile-modal").style.display = "block";
+    }
+
+    function closeProfileModal() {
+      document.getElementById("modal-overlay").style.display = "none";
+      document.getElementById("profile-modal").style.display = "none";
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById("profile-name").value.trim();
+      const file = document.getElementById("profile-image").files[0];
+      if (!name) return alert("Name is required");
+
+      let imageBase64 = "";
+      if (file) imageBase64 = await toBase64(file);
+
+      await db.collection("users").doc(currentUser.uid).set({ name, imageBase64 });
+      currentProfile = { name, imageBase64 };
+      closeProfileModal();
+      loadComments();
+    }
+
+    async function updateProfile() {
+      const name = document.getElementById("sidebar-name").value.trim();
+      const file = document.getElementById("sidebar-photo-input").files[0];
+      let imageBase64 = currentProfile.imageBase64;
+
+      if (file) imageBase64 = await toBase64(file);
+
+      await db.collection("users").doc(currentUser.uid).update({ name, imageBase64 });
+      document.getElementById("sidebar-photo").src = imageBase64;
+      currentProfile.name = name;
+      currentProfile.imageBase64 = imageBase64;
+      loadComments();
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
 
     async function submitComment(parentId = null) {
       if (!ensureProfileComplete()) return;
