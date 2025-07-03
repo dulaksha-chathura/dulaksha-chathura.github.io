@@ -208,7 +208,7 @@
       return true;
     }
 
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
       if (!user) {
         alert("You must be logged in to view this page.");
         window.location.href = "login.html";
@@ -255,123 +255,37 @@
       }
     }
 
-    function renderComment(comment, replies, currentUserId) {
-      const likeCount = comment.likeCount || 0;
-      const dislikeCount = comment.dislikeCount || 0;
-      const userReaction = comment.userReaction || null; // 'like', 'dislike' or null
-    
-      return `
+    function renderComment(comment, replies) {
+      return 
         <div class="comment">
           <div class="comment-header">
             <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" />
             <div class="name">${comment.name || 'Anonymous'}</div>
-            ${
-              comment.uid === currentUserId 
-                ? `<button class="delete-btn" onclick="deleteComment('${comment.id}')">Delete</button>` 
-                : ''
-            }
           </div>
           <div>${comment.text}</div>
           <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
-          
-          <div>
-            <button 
-              class="like-btn" 
-              style="color: ${userReaction === 'like' ? 'green' : 'black'}" 
-              onclick="toggleReaction('${comment.id}', 'like')">👍 ${likeCount}</button>
-            
-            <button 
-              class="dislike-btn" 
-              style="color: ${userReaction === 'dislike' ? 'red' : 'black'}" 
-              onclick="toggleReaction('${comment.id}', 'dislike')">👎 ${dislikeCount}</button>
-          </div>
-    
           <div id="replies-${comment.id}" class="reply-box">
-            ${replies.map(r => renderComment(r, [], currentUserId)).join('')}
+            ${replies.map(r => renderComment(r, [])).join('')}
           </div>
         </div>
-      `;
+      ;
     }
 
     async function loadComments() {
-      try {
-        const snapshot = await db.collection("comments").orderBy("timestamp").get();
-    
-        // Fetch all reactions in parallel
-        const reactionPromises = snapshot.docs.map(doc =>
-          db.collection("comments").doc(doc.id).collection("reactions").get()
-        );
-        const reactionsSnapshots = await Promise.all(reactionPromises);
-    
-        const comments = [];
-    
-        snapshot.docs.forEach((doc, idx) => {
-          const commentData = doc.data();
-          commentData.id = doc.id;
-    
-          const reactionsSnap = reactionsSnapshots[idx];
-          let likeCount = 0, dislikeCount = 0, userReaction = null;
-    
-          reactionsSnap.forEach(rDoc => {
-            const reaction = rDoc.data();
-            if (reaction.type === 'like') likeCount++;
-            else if (reaction.type === 'dislike') dislikeCount++;
-            if (rDoc.id === currentUser.uid) userReaction = reaction.type;
-          });
-    
-          commentData.likeCount = likeCount;
-          commentData.dislikeCount = dislikeCount;
-          commentData.userReaction = userReaction;
-    
-          comments.push(commentData);
-        });
-    
-        // Group replies by parent comment ID
-        const parentMap = {};
-        comments.forEach(c => {
-          if (c.parent) {
-            parentMap[c.parent] = parentMap[c.parent] || [];
-            parentMap[c.parent].push(c);
-          }
-        });
-    
-        const html = comments
-          .filter(c => !c.parent)
-          .map(c => renderComment(c, parentMap[c.id] || [], currentUser.uid))
-          .join('');
-    
-        document.getElementById("comments-list").innerHTML = html || "No comments yet.";
-    
-      } catch (err) {
-        console.error("Failed to load comments:", err);
-        document.getElementById("comments-list").innerHTML = "Failed to load comments.";
-      }
-    }
-
-    async function toggleReaction(commentId, reactionType) {
-      if (!currentUser) {
-        alert("You must be logged in to react.");
-        return;
-      }
-    
-      const reactionRef = db.collection("comments").doc(commentId).collection("reactions").doc(currentUser.uid);
-      const doc = await reactionRef.get();
-    
-      if (doc.exists) {
-        const currentType = doc.data().type;
-        if (currentType === reactionType) {
-          // Same reaction clicked, remove reaction
-          await reactionRef.delete();
-        } else {
-          // Different reaction, update it
-          await reactionRef.set({ type: reactionType });
+      const snapshot = await db.collection("comments").orderBy("timestamp").get();
+      const comments = [];
+      snapshot.forEach(doc => {
+        comments.push({ id: doc.id, ...doc.data() });
+      });
+      const parentMap = {};
+      comments.forEach(c => {
+        if (c.parent) {
+          parentMap[c.parent] = parentMap[c.parent] || [];
+          parentMap[c.parent].push(c);
         }
-      } else {
-        // No reaction yet, add one
-        await reactionRef.set({ type: reactionType });
-      }
-    
-      loadComments();
+      });
+      const html = comments.filter(c => !c.parent).map(c => renderComment(c, parentMap[c.id] || [])).join('');
+      document.getElementById("comments-list").innerHTML = html || "No comments yet.";
     }
   </script>
 </body>
