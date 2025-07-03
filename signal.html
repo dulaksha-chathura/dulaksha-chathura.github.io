@@ -211,32 +211,6 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        alert("You must be logged in to view this page.");
-        window.location.href = "login.html";
-      }
-    });
-
-    function logout() {
-      auth.signOut().then(() => {
-        alert("Logged out!");
-        window.location.href = "login.html";
-      });
-    }
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
-      authDomain: "project1-aa092.firebaseapp.com",
-      projectId: "project1-aa092",
-      storageBucket: "project1-aa092.appspot.com",
-      messagingSenderId: "889626944701",
-      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
-      measurementId: "G-NGFVCDFNKZ"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
     const profileModal = document.getElementById('profile-modal');
@@ -245,10 +219,18 @@
     const commentInput = document.getElementById('comment-input');
     const commentButton = document.querySelector('#comment-form button');
 
+    function logout() {
+      auth.signOut().then(() => {
+        alert("Logged out!");
+        window.location.href = "login.html";
+      });
+    }
+
     function showProfileModal() {
       profileModal.style.display = 'block';
       modalOverlay.style.display = 'block';
     }
+
     function hideProfileModal() {
       profileModal.style.display = 'none';
       modalOverlay.style.display = 'none';
@@ -256,7 +238,7 @@
 
     auth.onAuthStateChanged(async user => {
       if (!user) {
-        alert("You must be logged in to comment.");
+        alert("You must be logged in to view this page.");
         window.location.href = "login.html";
         return;
       }
@@ -329,6 +311,7 @@
         alert('Comment cannot be empty');
         return;
       }
+      
       const user = auth.currentUser;
       if (!user) {
         alert("You must be logged in");
@@ -342,7 +325,7 @@
       });
 
       commentInput.value = '';
-      loadComments();
+      await loadComments();
     }
 
     async function loadComments() {
