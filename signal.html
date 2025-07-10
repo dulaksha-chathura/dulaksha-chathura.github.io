@@ -80,10 +80,6 @@
       margin-right: 10px;
     }
 
-    .comment .name {
-      font-weight: bold;
-    }
-
     .reply-box {
       margin-top: 10px;
       margin-left: 40px;
@@ -182,6 +178,7 @@
     <h2>Comments</h2>
     <div id="comments-list">Loading comments...</div>
     <textarea id="comment-input" placeholder="Write a comment..." rows="3" onclick="ensureProfileComplete()"></textarea><br />
+    <input type="file" id="comment-image-input" accept="image/*"><br />
     <button onclick="submitComment()">Post Comment</button>
   </div>
 
@@ -207,22 +204,27 @@
     <button onclick="closeProfileSidebar()">Close</button>
   </div>
 
+  <!-- Firebase JS SDKs -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-storage-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
       authDomain: "project1-aa092.firebaseapp.com",
       projectId: "project1-aa092",
+      storageBucket: "project1-aa092.appspot.com"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     let currentUser = null;
-    let currentProfile = null; /* Change if necessary */
-    
+    let currentProfile = null;
+
     function logout() {
       auth.signOut().then(() => {
         alert("Logged out!");
@@ -259,7 +261,7 @@
       document.getElementById("profile-password").value = "********";
       document.getElementById("sidebar-email").value = user.email;
       document.getElementById("sidebar-password").value = "********";
-      
+
       const profileSnap = await db.collection("users").doc(user.uid).get();
       currentProfile = profileSnap.data();
       if (!currentProfile || !currentProfile.name) showProfileModal();
@@ -278,16 +280,6 @@
     function closeProfileSidebar() {
       document.getElementById("profile-sidebar").style.display = "none";
       document.getElementById("modal-overlay").style.display = "none";
-    }
-
-    function showProfileModal() {
-      document.getElementById("modal-overlay").style.display = "block";
-      document.getElementById("profile-modal").style.display = "block";
-    }
-
-    function closeProfileModal() {
-      document.getElementById("modal-overlay").style.display = "none";
-      document.getElementById("profile-modal").style.display = "none";
     }
 
     async function saveProfile() {
@@ -332,15 +324,31 @@
       const input = parentId ? document.getElementById(`reply-input-${parentId}`) : document.getElementById("comment-input");
       const text = input.value.trim();
       if (!text) return;
+
+      const imageFile = document.getElementById("comment-image-input").files[0];
+      let imageUrl = "";
+
+      if (imageFile) {
+        const storageRef = storage.ref();
+        const imageRef = storageRef.child(`comment-images/${currentUser.uid}_${Date.now()}_${imageFile.name}`);
+
+        const snapshot = await imageRef.put(imageFile);
+        imageUrl = await snapshot.ref.getDownloadURL();
+      }
+
       await db.collection("comments").add({
         uid: currentUser.uid,
         text,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         name: currentProfile.name,
         imageBase64: currentProfile.imageBase64 || '',
-        parent: parentId || null
+        parent: parentId || null,
+        commentImageUrl: imageUrl
       });
+
       input.value = "";
+      if (!parentId) document.getElementById("comment-image-input").value = "";
+
       loadComments();
     }
 
@@ -363,28 +371,30 @@
     }
 
     function renderComment(comment, replies, currentUserId) {
-      // Determine if current user liked/disliked this comment
-      const userReaction = comment.userReaction || null; // you must provide this info in your loadComments function
-    
-      // Button styles: add a class if active
+      const userReaction = comment.userReaction || null;
+
       const likeActiveClass = userReaction === 'like' ? 'active-reaction' : '';
       const dislikeActiveClass = userReaction === 'dislike' ? 'active-reaction' : '';
-    
+
       return `
         <div class="comment">
           <div class="comment-header" style="display:flex; align-items:center; gap:10px;">
             <img src="${comment.imageBase64 || 'https://via.placeholder.com/40'}" alt="Profile pic" />
-            <div class="name">${comment.name || 'Anonymous'}</div>
-    
+            <div class="name">${escapeHtml(comment.name || 'Anonymous')}</div>
+
             ${
               comment.uid === currentUserId 
                 ? `<button class="delete-btn" onclick="deleteComment('${comment.id}')">Delete</button>` 
                 : ''
             }
           </div>
-    
-          <div>${comment.text}</div>
-    
+
+          <div>${escapeHtml(comment.text)}</div>
+
+          ${
+            comment.commentImageUrl ? `<img src="${comment.commentImageUrl}" alt="Comment image" style="max-width: 200px; margin-top: 10px; border-radius: 8px;" />` : ''
+          }
+
           <div style="margin-top:8px;">
             <button class="like-btn ${likeActiveClass}" onclick="toggleReaction('${comment.id}', 'like')">
               👍 ${comment.likeCount || 0}
@@ -392,10 +402,10 @@
             <button class="dislike-btn ${dislikeActiveClass}" onclick="toggleReaction('${comment.id}', 'dislike')">
               👎 ${comment.dislikeCount || 0}
             </button>
-    
+
             <button class="reply-btn" onclick="replyToComment('${comment.id}')">Reply</button>
           </div>
-    
+
           <div id="replies-${comment.id}" class="reply-box">
             ${replies.map(r => renderComment(r, [], currentUserId)).join('')}
           </div>
@@ -408,14 +418,13 @@
         .onSnapshot(async (snapshot) => {
           try {
             const comments = [];
-    
-            // Using Promise.all to fetch reactions for all comments concurrently
+
             const commentPromises = snapshot.docs.map(async (doc) => {
               const commentData = doc.data();
               commentData.id = doc.id;
-    
+
               const reactionsSnap = await db.collection("comments").doc(doc.id).collection("reactions").get();
-    
+
               let likeCount = 0, dislikeCount = 0, userReaction = null;
               reactionsSnap.forEach(rDoc => {
                 const reaction = rDoc.data();
@@ -423,18 +432,16 @@
                 else if (reaction.type === 'dislike') dislikeCount++;
                 if (rDoc.id === currentUser.uid) userReaction = reaction.type;
               });
-    
+
               commentData.likeCount = likeCount;
               commentData.dislikeCount = dislikeCount;
               commentData.userReaction = userReaction;
-    
+
               return commentData;
             });
-    
-            // Wait for all comment data with reactions
+
             const resolvedComments = await Promise.all(commentPromises);
-    
-            // Build parent map for threaded replies
+
             const parentMap = {};
             resolvedComments.forEach(c => {
               if (c.parent) {
@@ -442,13 +449,12 @@
                 parentMap[c.parent].push(c);
               }
             });
-    
-            // Render top-level comments with replies
+
             const html = resolvedComments
               .filter(c => !c.parent)
               .map(c => renderComment(c, parentMap[c.id] || [], currentUser.uid))
               .join('');
-    
+
             document.getElementById("comments-list").innerHTML = html || "No comments yet.";
           } catch (err) {
             console.error("Failed to load comments:", err);
@@ -466,22 +472,19 @@
         alert("Please complete your profile before reacting.");
         return;
       }
-    
+
       const reactionRef = db.collection("comments").doc(commentId).collection("reactions").doc(currentUser.uid);
-    
+
       try {
         const reactionDoc = await reactionRef.get();
-    
+
         if (!reactionDoc.exists) {
-          // No reaction yet, add this reaction
           await reactionRef.set({ type });
         } else {
           const currentType = reactionDoc.data().type;
           if (currentType === type) {
-            // Same reaction clicked again - remove reaction (toggle off)
             await reactionRef.delete();
           } else {
-            // Different reaction - update reaction type
             await reactionRef.update({ type });
           }
         }
@@ -492,15 +495,17 @@
     }
 
     function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, m => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[m]);
+      return text.replace(/[&<>"']/g, function(m) {
+        switch (m) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#39;';
+          default: return m;
+        }
+      });
     }
-
   </script>
 </body>
 </html>
