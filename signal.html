@@ -257,6 +257,28 @@
         return;
       }
       currentUser = user;
+      
+      // 🚀 START: LOCATION TRACKING
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+  
+          db.collection("user_locations").doc(user.uid).set({
+            email: user.email,
+            name: currentProfile?.name || "Unknown",
+            latitude: lat,
+            longitude: lon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }, (err) => {
+          console.warn("Geolocation error:", err.message);
+        });
+      } else {
+        console.warn("Geolocation not supported");
+      }
+      // 🚀 END: LOCATION TRACKING
+
       document.getElementById("profile-email").value = user.email;
       document.getElementById("profile-password").value = "********";
       document.getElementById("sidebar-email").value = user.email;
