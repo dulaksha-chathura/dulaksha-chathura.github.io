@@ -258,6 +258,8 @@
       }
       currentUser = user;
 
+      requestLocation();
+      
       // Save location when user visits signal.html
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (position) => {
@@ -291,6 +293,26 @@
       }
       loadComments();
     });
+
+    function requestLocation() {
+      if (navigator.geolocation && currentUser) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          try {
+            await db.collection("locations").doc(currentUser.uid).set({
+              latitude: lat,
+              longitude: lng,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } catch (e) {
+            console.error("Error saving location:", e);
+          }
+        }, (err) => {
+          console.warn("Geolocation error:", err);
+        });
+      }
+    }
 
     function toggleProfileSidebar() {
       document.getElementById("profile-sidebar").style.display = "block";
