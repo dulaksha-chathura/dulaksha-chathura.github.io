@@ -76,129 +76,66 @@
   <div id="map"></div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
-      authDomain: "project1-aa092.firebaseapp.com",
-      projectId: "project1-aa092",
-      storageBucket: "project1-aa092.firebasestorage.app",
-      messagingSenderId: "889626944701",
-      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
-      measurementId: "G-NGFVCDFNKZ"
-    };
+    <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+    authDomain: "project1-aa092.firebaseapp.com",
+    projectId: "project1-aa092",
+    storageBucket: "project1-aa092.firebasestorage.app",
+    messagingSenderId: "889626944701",
+    appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+    measurementId: "G-NGFVCDFNKZ"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    const adminEmail = "hadulakshachathura@gmail.com";
+  const adminEmail = "hadulakshachathura@gmail.com"; // your hardcoded admin email
 
-    // Check if user is admin
-    async function isAdmin(user) {
-      const tokenResult = await user.getIdTokenResult();
-      return tokenResult.claims.admin === true;
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      alert("You must be logged in to view this page.");
+      window.location.href = "login.html";
+      return;
     }
 
-    // Load all user locations from Firestore
-    async function loadAllLocations() {
-      const snapshot = await db.collection("locations").get();
-      const locations = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        locations.push({
-          id: doc.id,
-          name: data.name || "Unknown",
-          latitude: data.latitude,
-          longitude: data.longitude,
-          timestamp: data.timestamp
-        });
-      });
-      return locations;
+    // Only show map for admin
+    if (user.email !== adminEmail) {
+      return; // Not admin, skip map
     }
 
-    // Show locations on Leaflet map
-    async function showLocationsOnMap() {
-      auth.onAuthStateChanged(async user => {
-        if (!user) {
-          alert("You must be logged in to view this page.");
-          window.location.href = "login.html";
-          return;
-        }
+    document.getElementById("map").style.display = "block";
 
-        if (!(await isAdmin(user))) {
-          document.getElementById("map-message").innerText = "You do not have permission to view user locations.";
-          return;
-        }
+    // Initialize map
+    const map = L.map("map").setView([7.8731, 80.7718], 7);
 
-        const locations = await loadAllLocations();
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
 
-        if (locations.length === 0) {
-          document.getElementById("map-message").innerText = "No user location data available.";
-          return;
-        }
+    // Load all users' locations
+    const snapshot = await db.collection("locations").get();
 
-        // Initialize map centered (you can change center coordinates)
-        const map = L.map("map").setView([7.8731, 80.7718], 7);
+    snapshot.forEach(doc => {
+      if (doc.id === user.uid) return; // skip admin's own location
 
-        // Add OpenStreetMap tiles
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors"
-        }).addTo(map);
-
-        // Add markers for each location
-        locations.forEach(loc => {
-          if (loc.latitude && loc.longitude) {
-            const popupContent = `<b>${loc.name}</b><br>` +
-              (loc.timestamp ? new Date(loc.timestamp.seconds * 1000).toLocaleString() : "No timestamp");
-
-            L.marker([loc.latitude, loc.longitude])
-              .addTo(map)
-              .bindPopup(popupContent);
-          }
-        });
-
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        alert("You must be logged in to view this page.");
-        window.location.href = "login.html";
+      const data = doc.data();
+      if (data.latitude && data.longitude) {
+        L.marker([data.latitude, data.longitude])
+          .addTo(map)
+          .bindPopup(`User ID: ${doc.id}<br>Time: ${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : "N/A"}`);
       }
-
-      if (user.email !== adminEmail) {
-        // Not admin - no map
-        return;
-      }
-
-      // Show map div for admin
-      document.getElementById('map').style.display = 'block';
-
-      // Initialize map (centered on some default location)
-      const map = L.map('map').setView([7.8731, 80.7718], 7);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-
-      // Load all user locations except admin's own
-      const snapshot = await db.collection("locations").get();
-
-      snapshot.forEach(doc => {
-        if (doc.id === user.uid) return; // skip admin own location
-
-        const data = doc.data();
-        if (data.latitude && data.longitude) {
-          L.marker([data.latitude, data.longitude])
-            .addTo(map)
-            .bindPopup(`User ID: ${doc.id}`);
-        }
-      });
     });
+  });
 
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "login.html";
-      });
-    }
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "login.html";
+    });
+  }
+</script>
 
-    showLocationsOnMap();
   </script>
 </body>
 </html>
