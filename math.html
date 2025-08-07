@@ -37,7 +37,28 @@
       background-color: #fff;
       color: #000;
     }
+
+    /* Map styles */
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-top: 40px;
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+    }
+
+    #map-message {
+      margin-top: 20px;
+      color: #ffd700;
+      font-style: italic;
+    }
   </style>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
 </head>
 <body>
   <a href="#" class="logout" onclick="logout()">Log Out</a>
@@ -53,9 +74,18 @@
     In this section, you'll find articles explaining fundamental theories and their applications in real-world systems.
   </p>
 
+  <!-- Map container -->
+  <div id="map"></div>
+  <div id="map-message"></div>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
@@ -69,6 +99,71 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Check if user is admin
+    async function isAdmin(user) {
+      const tokenResult = await user.getIdTokenResult();
+      return tokenResult.claims.admin === true;
+    }
+
+    // Load all user locations from Firestore
+    async function loadAllLocations() {
+      const snapshot = await db.collection("locations").get();
+      const locations = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        locations.push({
+          id: doc.id,
+          name: data.name || "Unknown",
+          latitude: data.latitude,
+          longitude: data.longitude,
+          timestamp: data.timestamp
+        });
+      });
+      return locations;
+    }
+
+    // Show locations on Leaflet map
+    async function showLocationsOnMap() {
+      auth.onAuthStateChanged(async user => {
+        if (!user) {
+          alert("You must be logged in to view this page.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        if (!(await isAdmin(user))) {
+          document.getElementById("map-message").innerText = "You do not have permission to view user locations.";
+          return;
+        }
+
+        const locations = await loadAllLocations();
+
+        if (locations.length === 0) {
+          document.getElementById("map-message").innerText = "No user location data available.";
+          return;
+        }
+
+        // Initialize map centered (you can change center coordinates)
+        const map = L.map("map").setView([7.8731, 80.7718], 7);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(map);
+
+        // Add markers for each location
+        locations.forEach(loc => {
+          if (loc.latitude && loc.longitude) {
+            const popupContent = `<b>${loc.name}</b><br>` +
+              (loc.timestamp ? new Date(loc.timestamp.seconds * 1000).toLocaleString() : "No timestamp");
+
+            L.marker([loc.latitude, loc.longitude])
+              .addTo(map)
+              .bindPopup(popupContent);
+          }
+        });
 
     auth.onAuthStateChanged(user => {
       if (!user) {
@@ -82,6 +177,8 @@
         window.location.href = "login.html";
       });
     }
+
+    showLocationsOnMap();
   </script>
 </body>
 </html>
