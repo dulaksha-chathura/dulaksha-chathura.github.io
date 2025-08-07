@@ -2,7 +2,18 @@
 <html>
 <head>
   <title>Mathematics Articles</title>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- Leaflet CSS and JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <style>
     body {
       background-image: url('background2.webp');
@@ -38,27 +49,15 @@
       color: #000;
     }
 
-    /* Map styles */
     #map {
-      height: 400px;
+      height: 500px;
       width: 100%;
-      margin-top: 40px;
-      border: 2px solid #ffd700;
+      border: 1px solid #ccc;
       border-radius: 8px;
-    }
-
-    #map-message {
+      display: none; /* Hidden by default for non-admin */
       margin-top: 20px;
-      color: #ffd700;
-      font-style: italic;
     }
   </style>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-  />
 </head>
 <body>
   <a href="#" class="logout" onclick="logout()">Log Out</a>
@@ -74,17 +73,7 @@
     In this section, you'll find articles explaining fundamental theories and their applications in real-world systems.
   </p>
 
-  <!-- Map container -->
   <div id="map"></div>
-  <div id="map-message"></div>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -100,6 +89,8 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    const adminEmail = "hadulakshachathura@gmail.com";
 
     // Check if user is admin
     async function isAdmin(user) {
@@ -170,6 +161,35 @@
         alert("You must be logged in to view this page.");
         window.location.href = "login.html";
       }
+
+      if (user.email !== adminEmail) {
+        // Not admin - no map
+        return;
+      }
+
+      // Show map div for admin
+      document.getElementById('map').style.display = 'block';
+
+      // Initialize map (centered on some default location)
+      const map = L.map('map').setView([7.8731, 80.7718], 7);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Load all user locations except admin's own
+      const snapshot = await db.collection("locations").get();
+
+      snapshot.forEach(doc => {
+        if (doc.id === user.uid) return; // skip admin own location
+
+        const data = doc.data();
+        if (data.latitude && data.longitude) {
+          L.marker([data.latitude, data.longitude])
+            .addTo(map)
+            .bindPopup(`User ID: ${doc.id}`);
+        }
+      });
     });
 
     function logout() {
