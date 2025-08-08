@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mathematics Articles</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      background-image: url('background2.webp');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-attachment: fixed;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #ffd700;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background-color: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      background-color: #fff;
+      color: #000;
+    }
+
+    #map {
+      height: 500px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      display: none; /* hidden for non-admin */
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#" class="logout" onclick="logout()">Log Out</a>
+
+  <h1>Advanced Mathematics</h1>
+  <p>
+    Advanced mathematics plays a critical role in the development of engineering, science, and modern technology. Topics such as real analysis, linear algebra, abstract algebra, and differential equations provide a strong theoretical foundation.
+  </p>
+  <p>
+    Mathematical tools like Fourier analysis, vector calculus, and complex functions are widely used in signal processing, quantum mechanics, machine learning, and artificial intelligence.
+  </p>
+  <p>
+    In this section, you'll find articles explaining fundamental theories and their applications in real-world systems.
+  </p>
+
+  <div id="map"></div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.firebasestorage.app",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const adminEmail = "hadulakshachathura@gmail.com";
+
+    // Logout function
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+
+    // Auth check & map load
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        alert("You must be logged in to view this page.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (user.email !== adminEmail) {
+        // Not admin, don't show map
+        return;
+      }
+
+      // Show map container for admin
+      document.getElementById('map').style.display = 'block';
+
+      // Initialize Leaflet map
+      const map = L.map('map').setView([7.8731, 80.7718], 7); // Center on Sri Lanka
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Get all user locations except admin's
+      const snapshot = await db.collection("locations").get();
+      snapshot.forEach(doc => {
+        if (doc.id === user.uid) return; // Skip admin's own location
+
+        const data = doc.data();
+        if (data.latitude && data.longitude) {
+          const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+          marker.bindPopup(data.name || `User: ${doc.id}`);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
