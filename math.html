@@ -81,7 +81,7 @@
       apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
       authDomain: "project1-aa092.firebaseapp.com",
       projectId: "project1-aa092",
-      storageBucket: "project1-aa092.firebasestorage.app",
+      storageBucket: "project1-aa092.appspot.com", // fixed to .appspot.com
       messagingSenderId: "889626944701",
       appId: "1:889626944701:web:acdf552bacc6958585c3d4",
       measurementId: "G-NGFVCDFNKZ"
@@ -93,14 +93,12 @@
 
     const adminEmail = "hadulakshachathura@gmail.com";
 
-    // Logout function
     function logout() {
       auth.signOut().then(() => {
         window.location.href = "login.html";
       });
     }
 
-    // Auth check & map load
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         alert("You must be logged in to view this page.");
@@ -116,25 +114,59 @@
       // Show map container for admin
       document.getElementById('map').style.display = 'block';
 
-      // Initialize Leaflet map
-      const map = L.map('map').setView([7.8731, 80.7718], 7); // Center on Sri Lanka
+      // Initialize Leaflet map centered on Sri Lanka
+      const map = L.map('map').setView([7.8731, 80.7718], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
-      // Get all user locations except admin's
-      const snapshot = await db.collection("locations").get();
-      snapshot.forEach(doc => {
-        if (doc.id === user.uid) return; // Skip admin's own location
+      // To manage markers by user id for real-time update
+      const markers = {};
 
-        const data = doc.data();
-        if (data.latitude && data.longitude) {
-          const marker = L.marker([data.latitude, data.longitude]).addTo(map);
-          marker.bindPopup(data.name || `User: ${doc.id}`);
-        }
+      // Fetch all user profiles once to get names
+      const usersSnapshot = await db.collection("users").get();
+      const usersMap = {};
+      usersSnapshot.forEach(doc => {
+        usersMap[doc.id] = doc.data();
+      });
+
+      // Real-time listener for locations collection
+      db.collection("locations").onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          const doc = change.doc;
+          const data = doc.data();
+          const uid = doc.id;
+
+          // Skip admin's own location
+          if (uid === user.uid) return;
+
+          if (change.type === "added" || change.type === "modified") {
+            // Add or update marker
+            if (data.latitude && data.longitude) {
+              if (markers[uid]) {
+                // Move existing marker
+                markers[uid].setLatLng([data.latitude, data.longitude]);
+              } else {
+                // Create new marker
+                const userProfile = usersMap[uid];
+                const displayName = (userProfile && userProfile.name) ? userProfile.name : `User: ${uid}`;
+                const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                marker.bindPopup(displayName);
+                markers[uid] = marker;
+              }
+            }
+          } else if (change.type === "removed") {
+            // Remove marker if location document deleted
+            if (markers[uid]) {
+              map.removeLayer(markers[uid]);
+              delete markers[uid];
+            }
+          }
+        });
       });
     });
   </script>
 </body>
 </html>
+
