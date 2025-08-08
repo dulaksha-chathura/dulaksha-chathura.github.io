@@ -1,73 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Map View</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <title>Mathematics Articles</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- Google Maps JS API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+
   <style>
-    #map-container {
-      width: 100%;
+    body {
+      background-image: url('background2.webp');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center top;
+      background-attachment: fixed;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #ffd700;
+    }
+
+    .logout {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      background-color: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logout:hover {
+      background-color: #fff;
+      color: #000;
+    }
+
+    #map {
       height: 500px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      display: none; /* hidden for non-admin */
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
+  <a href="#" class="logout" onclick="logout()">Log Out</a>
 
-<h2>Admin Map View</h2>
-<div id="map-container"></div>
+  <h1>Advanced Mathematics</h1>
+  <p>
+    Advanced mathematics plays a critical role in the development of engineering, science, and modern technology. Topics such as real analysis, linear algebra, abstract algebra, and differential equations provide a strong theoretical foundation.
+  </p>
+  <p>
+    Mathematical tools like Fourier analysis, vector calculus, and complex functions are widely used in signal processing, quantum mechanics, machine learning, and artificial intelligence.
+  </p>
+  <p>
+    In this section, you'll find articles explaining fundamental theories and their applications in real-world systems.
+  </p>
 
-<script>
-  // Initialize Firebase
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
+  <div id="map"></div>
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDYJYStg_GJBxn8x8M0foavomuP6mAvti4",
+      authDomain: "project1-aa092.firebaseapp.com",
+      projectId: "project1-aa092",
+      storageBucket: "project1-aa092.firebasestorage.app",
+      messagingSenderId: "889626944701",
+      appId: "1:889626944701:web:acdf552bacc6958585c3d4",
+      measurementId: "G-NGFVCDFNKZ"
+    };
 
-  const ADMIN_EMAIL = "your-admin-email@example.com";
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  auth.onAuthStateChanged(async user => {
-    if (!user) {
-      alert("You must be logged in to view this page.");
-      window.location.href = "login.html";
-      return;
+    const adminEmail = "hadulakshachathura@gmail.com";
+
+    // Logout function
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      });
     }
 
-    if (user.email !== ADMIN_EMAIL) {
-      alert("You are not authorized to view this page.");
-      window.location.href = "index.html";
-      return;
-    }
-
-    const map = new google.maps.Map(document.getElementById('map-container'), {
-      zoom: 5,
-      center: { lat: 7.8731, lng: 80.7718 } // Sri Lanka center
-    });
-
-    const locationsSnapshot = await db.collection("locations").get();
-    locationsSnapshot.forEach(doc => {
-      const loc = doc.data();
-      if (doc.id !== user.uid && loc.latitude && loc.longitude) {
-        new google.maps.Marker({
-          position: { lat: loc.latitude, lng: loc.longitude },
-          map: map,
-          title: loc.email || "User"
-        });
+    // Show Google Map with user locations
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        alert("You must be logged in to view this page.");
+        window.location.href = "login.html";
+        return;
       }
-    });
-  });
-</script>
 
+      if (user.email !== adminEmail) {
+        // Not admin, don't show map
+        return;
+      }
+
+      // Show map for admin
+      document.getElementById('map').style.display = 'block';
+
+      // Initialize Google Map
+      const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 6,
+        center: { lat: 7.8731, lng: 80.7718 } // Sri Lanka
+      });
+
+      // Get all user locations except admin's
+      const snapshot = await db.collection("locations").get();
+      snapshot.forEach(doc => {
+        if (doc.id === user.uid) return; // skip admin location
+
+        const data = doc.data();
+        if (data.latitude && data.longitude) {
+          new google.maps.Marker({
+            position: { lat: data.latitude, lng: data.longitude },
+            map: map,
+            title: data.name || `User: ${doc.id}`
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
+
 
