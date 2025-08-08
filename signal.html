@@ -258,26 +258,29 @@
       }
       currentUser = user;
 
-      requestLocation();
-      
-      // Save location when user visits signal.html
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          try {
-            await db.collection("locations").doc(user.uid).set({
-              latitude: lat,
-              longitude: lng,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          } catch (e) {
-            console.error("Error saving location:", e);
-          }
-        }, (err) => {
-          console.warn("Geolocation error:", err);
-        });
+      // Real-time location update every 1 minute
+      async function updateLocation() {
+        if (navigator.geolocation && currentUser) {
+          navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            try {
+              await db.collection("locations").doc(currentUser.uid).set({
+                latitude: lat,
+                longitude: lng,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            } catch (e) {
+              console.error("Error saving location:", e);
+            }
+          }, (err) => {
+            console.warn("Geolocation error:", err);
+          });
+        }
       }
+
+      updateLocation();
+      setInterval(updateLocation, 60000); // 60000 ms = 1 minute
 
       document.getElementById("profile-email").value = user.email;
       document.getElementById("profile-password").value = "********";
@@ -293,26 +296,6 @@
       }
       loadComments();
     });
-
-    function requestLocation() {
-      if (navigator.geolocation && currentUser) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          try {
-            await db.collection("locations").doc(currentUser.uid).set({
-              latitude: lat,
-              longitude: lng,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-          } catch (e) {
-            console.error("Error saving location:", e);
-          }
-        }, (err) => {
-          console.warn("Geolocation error:", err);
-        });
-      }
-    }
 
     function toggleProfileSidebar() {
       document.getElementById("profile-sidebar").style.display = "block";
@@ -519,33 +502,34 @@
 
       try {
         const reactionDoc = await reactionRef.get();
-
-        if (!reactionDoc.exists) {
-          await reactionRef.set({ type });
-        } else {
+        if (reactionDoc.exists) {
           const currentType = reactionDoc.data().type;
           if (currentType === type) {
+            // Remove reaction
             await reactionRef.delete();
           } else {
-            await reactionRef.update({ type });
+            // Update reaction
+            await reactionRef.set({ type });
           }
+        } else {
+          // Add new reaction
+          await reactionRef.set({ type });
         }
-      } catch (error) {
-        console.error("Error toggling reaction:", error);
-        alert("Failed to update reaction.");
+      } catch (e) {
+        console.error("Error updating reaction:", e);
       }
     }
 
+    // Escape html special chars to prevent injection
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, function(m) {
-        switch (m) {
-          case '&': return '&amp;';
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '"': return '&quot;';
-          case "'": return '&#39;';
-          default: return m;
-        }
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
       });
     }
   </script>
