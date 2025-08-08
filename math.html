@@ -10,8 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- Google Maps JS API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
     body {
@@ -99,7 +100,7 @@
       });
     }
 
-    // Show Google Map with user locations
+    // Auth check & map load
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         alert("You must be logged in to view this page.");
@@ -112,32 +113,28 @@
         return;
       }
 
-      // Show map for admin
+      // Show map container for admin
       document.getElementById('map').style.display = 'block';
 
-      // Initialize Google Map
-      const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 6,
-        center: { lat: 7.8731, lng: 80.7718 } // Sri Lanka
-      });
+      // Initialize Leaflet map
+      const map = L.map('map').setView([7.8731, 80.7718], 7); // Center on Sri Lanka
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
 
       // Get all user locations except admin's
       const snapshot = await db.collection("locations").get();
       snapshot.forEach(doc => {
-        if (doc.id === user.uid) return; // skip admin location
+        if (doc.id === user.uid) return; // Skip admin's own location
 
         const data = doc.data();
         if (data.latitude && data.longitude) {
-          new google.maps.Marker({
-            position: { lat: data.latitude, lng: data.longitude },
-            map: map,
-            title: data.name || `User: ${doc.id}`
-          });
+          const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+          marker.bindPopup(data.name || `User: ${doc.id}`);
         }
       });
     });
   </script>
 </body>
 </html>
-
-
