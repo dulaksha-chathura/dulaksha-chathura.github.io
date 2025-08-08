@@ -275,15 +275,29 @@
               console.error("Error saving location:", e);
             }
           }, (err) => {
+            // Improved error handling
+            switch(err.code) {
+              case err.PERMISSION_DENIED:
+                alert("Location permission denied. Please allow location access for this feature.");
+                break;
+              case err.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable. Please ensure your device location is turned on.");
+                break;
+              case err.TIMEOUT:
+                alert("Location request timed out. Please try again.");
+                break;
+              default:
+                alert("An unknown error occurred while retrieving location.");
+                break;
+            }
             console.warn("Geolocation error:", err);
           });
         } else {
           console.warn("Geolocation not supported or no user logged in.");
         }
       }
-
+      
       updateLocation(); // update immediately on login
-
       setInterval(updateLocation, 60000); // update every 60 seconds
 
       document.getElementById("profile-email").value = user.email;
