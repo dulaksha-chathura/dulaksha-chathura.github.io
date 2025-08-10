@@ -139,7 +139,9 @@
           const uid = doc.id;
 
           // Skip admin's own location
-          if (uid === user.uid) return;
+          //if (uid === user.uid) return;
+
+          const marker = L.marker([data.latitude, data.longitude]).addTo(map);
 
           if (change.type === "added" || change.type === "modified") {
             // Add or update marker
@@ -151,7 +153,22 @@
                 // Create new marker
                 const userProfile = usersMap[uid];
                 const displayName = (userProfile && userProfile.name) ? userProfile.name : `User: ${uid}`;
-                const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+                //const marker = L.marker([data.latitude, data.longitude]).addTo(map);
+
+                let markerOptions = {};
+                if (uid === user.uid) {
+                  // Admin's own location → red icon
+                  markerOptions = {
+                    icon: L.icon({
+                      iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                      iconSize: [32, 32],
+                      iconAnchor: [16, 32],
+                      popupAnchor: [0, -32]
+                    })
+                  };
+                }
+                const marker = L.marker([data.latitude, data.longitude], markerOptions).addTo(map);
+
                 marker.bindPopup(displayName);
                 markers[uid] = marker;
               }
