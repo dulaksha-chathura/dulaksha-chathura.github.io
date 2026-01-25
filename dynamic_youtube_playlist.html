@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dynamic Teledrama Playlist</title>
+  <title>Latest Teledrama Playlist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -36,15 +36,12 @@
       color: black;
     }
 
-    /* Video Player */
-    #video-player {
-      margin: 40px auto;
+    .player-container {
+      margin: 20px auto;
+      width: 90%;
       max-width: 800px;
-      height: 450px;
+      aspect-ratio: 16/9;
       background-color: black;
-      border: 2px solid #ffd700;
-      border-radius: 16px;
-      overflow: hidden;
     }
 
     .playlist-container {
@@ -87,25 +84,26 @@
       .video-card {
         width: 90%;
       }
-      #video-player {
-        width: 90%;
-        height: 250px;
+      .player-container {
+        width: 100%;
       }
     }
   </style>
 </head>
 <body>
 
-  <h1>Dynamic Teledrama Playlist</h1>
+  <h1>Latest Teledrama Episodes</h1>
   <a href="index.html" id="backBtn">← Back to Home</a>
 
-  <!-- Video Player -->
-  <div id="video-player"></div>
+  <!-- Embedded Player -->
+  <div class="player-container">
+    <iframe id="videoPlayer" width="100%" height="100%" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+  </div>
 
-  <!-- Playlist thumbnails -->
+  <!-- Video Cards -->
   <div class="playlist-container" id="playlist"></div>
 
-  <!-- JS -->
   <script src="playlist.js"></script>
 </body>
 </html>
+
