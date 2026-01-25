@@ -1,77 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dynamic Teledrama Playlist</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Teledrama Auto Player</title>
 
-  <style>
+<style>
     body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-      margin: 0;
-      padding: 0;
-      text-align: center;
+        background: #0f0f0f;
+        color: white;
+        font-family: Arial;
+        text-align: center;
     }
-
-    h1 {
-      margin-top: 30px;
-      color: #ffd700;
+    iframe {
+        width: 80%;
+        height: 450px;
+        margin-top: 20px;
     }
-
-    a {
-      color: #ffd700;
-      text-decoration: none;
-    }
-
-    .playlist-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 20px;
-      padding: 30px;
-    }
-
-    .video-card {
-      width: 300px;
-      background: rgba(255,255,255,0.06);
-      border: 2px solid white;
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .video-card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 15px rgba(255,255,255,0.3);
-    }
-
-    .video-card img {
-      width: 100%;
-    }
-
-    .video-title {
-      padding: 10px;
-      color: #ffd700;
-      font-size: 15px;
-    }
-
-    .loading {
-      margin-top: 40px;
-      font-size: 18px;
-    }
-  </style>
+</style>
 </head>
+
 <body>
 
-<h1>📺 Latest Teledrama Episodes</h1>
-<a href="index.html">← Back to Home</a>
+<h2>Latest Teledrama Episodes</h2>
+<p id="status">Initializing...</p>
 
-<div class="loading" id="loading">Loading latest episodes...</div>
-<div class="playlist-container" id="playlist"></div>
+<iframe id="player" allowfullscreen></iframe>
 
-<script src="playlist.js"></script>
+<script src="player.js"></script>
 </body>
 </html>
