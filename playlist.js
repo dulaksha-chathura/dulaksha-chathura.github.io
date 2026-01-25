@@ -1,38 +1,53 @@
-const API_KEY = "YOUR_API_KEY_HERE";
-const CHANNEL_ID = "YOUR_CHANNEL_ID_HERE";
-const MAX_RESULTS = 10;
+// ---------------- CONFIG ----------------
+const API_KEY = 'YOUR_YOUTUBE_API_KEY'; // Replace with your API key
+const PLAYLIST_ID = 'YOUR_PLAYLIST_ID'; // Replace with your playlist ID
+const MAX_RESULTS = 20; // Number of videos to fetch
 
-const player = document.getElementById("player");
-
-async function loadLatestEpisode() {
-  const url = `https://www.googleapis.com/youtube/v3/search?` +
-              `key=${API_KEY}` +
-              `&channelId=${CHANNEL_ID}` +
-              `&part=snippet` +
-              `&order=date` +
-              `&maxResults=${MAX_RESULTS}` +
-              `&type=video`;
-
+// ---------------- FETCH PLAYLIST ----------------
+async function fetchPlaylist() {
+  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${PLAYLIST_ID}&maxResults=${MAX_RESULTS}&key=${API_KEY}`;
+  
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const res = await fetch(url);
+    const data = await res.json();
 
-    if (!data.items || data.items.length === 0) {
-      console.log("No videos found");
+    if (!data.items) {
+      console.error("No videos found or API limit reached", data);
       return;
     }
 
-    // Pick newest available video
-    const videoId = data.items[0].id.videoId;
-
-    player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-
+    displayVideos(data.items);
   } catch (err) {
-    console.error("YouTube API error:", err);
+    console.error("Error fetching playlist:", err);
   }
 }
 
-loadLatestEpisode();
+// ---------------- DISPLAY VIDEOS ----------------
+function displayVideos(videos) {
+  const container = document.getElementById('playlist');
+  container.innerHTML = '';
 
-// Auto refresh every 10 minutes
-setInterval(loadLatestEpisode, 10 * 60 * 1000);
+  videos.forEach(video => {
+    const videoId = video.snippet.resourceId.videoId;
+    const title = video.snippet.title;
+    const thumbnail = video.snippet.thumbnails.medium.url;
+
+    const card = document.createElement('div');
+    card.className = 'video-card';
+    card.onclick = () => {
+      window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+    };
+
+    card.innerHTML = `
+      <div class="video-thumbnail">
+        <img src="${thumbnail}" alt="${title}">
+      </div>
+      <div class="video-title">${title}</div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// ---------------- INIT ----------------
+fetchPlaylist();
