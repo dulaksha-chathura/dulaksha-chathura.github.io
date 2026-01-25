@@ -11,9 +11,7 @@
         font-family: Arial;
         text-align: center;
     }
-    iframe {
-        width: 80%;
-        height: 450px;
+    #player {
         margin-top: 20px;
     }
 </style>
@@ -22,10 +20,14 @@
 <body>
 
 <h2>Latest Teledrama Episodes</h2>
-<p id="status">Initializing...</p>
+<p id="status">Loading...</p>
 
-<iframe id="player" allowfullscreen></iframe>
+<!-- Player container (NOT iframe directly) -->
+<div id="player"></div>
 
+<!-- YouTube Iframe API -->
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="player.js"></script>
+
 </body>
 </html>
