@@ -12,100 +12,98 @@ const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 let videoQueue = [];
 let currentIndex = 0;
 let player;
+let apiReady = false;
 
-// --------------------------------------
-// YouTube API ready
-// --------------------------------------
-function onYouTubeIframeAPIReady() {
-    init();
-}
+// ---------------- API READY (MUST BE GLOBAL) ----------------
+window.onYouTubeIframeAPIReady = function () {
+  apiReady = true;
+  init();
+};
 
-// --------------------------------------
+// ---------------- INIT ----------------
 async function init() {
-    await updateLatestEpisodes();
-    createPlayer(videoQueue[0]);
-    setInterval(updateLatestEpisodes, CHECK_INTERVAL);
+  setStatus("Loading latest episodes…");
+  await updateLatestEpisodes();
+
+  if (videoQueue.length === 0) {
+    setStatus("No videos found");
+    return;
+  }
+
+  createPlayer(videoQueue[0]);
+  setInterval(updateLatestEpisodes, CHECK_INTERVAL);
 }
 
-// --------------------------------------
-// Create YT Player
-// --------------------------------------
+// ---------------- CREATE PLAYER ----------------
 function createPlayer(videoId) {
-    player = new YT.Player("player", {
-        height: "450",
-        width: "80%",
-        videoId: videoId,
-        playerVars: {
-            autoplay: 1,
-            rel: 0
-        },
-        events: {
-            onStateChange: onPlayerStateChange
-        }
-    });
+  player = new YT.Player("player", {
+    videoId: videoId,
+    playerVars: {
+      autoplay: 1,
+      rel: 0
+    },
+    events: {
+      onReady: () => setStatus("Playing ▶"),
+      onStateChange: onPlayerStateChange
+    }
+  });
 }
 
-// --------------------------------------
-// Detect END → Play next
-// --------------------------------------
+// ---------------- PLAYER STATE ----------------
 function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
-        playNext();
-    }
+  if (event.data === YT.PlayerState.ENDED) {
+    playNext();
+  }
 }
 
-// --------------------------------------
+// ---------------- PLAY NEXT ----------------
 function playNext() {
-    if (videoQueue.length === 0) return;
+  if (videoQueue.length === 0) return;
 
-    currentIndex = (currentIndex + 1) % videoQueue.length;
-    player.loadVideoById(videoQueue[currentIndex]);
+  currentIndex = (currentIndex + 1) % videoQueue.length;
+  player.loadVideoById(videoQueue[currentIndex]);
 }
 
-// --------------------------------------
-// Fetch latest episode from all playlists
-// --------------------------------------
+// ---------------- FETCH LATEST EPISODES ----------------
 async function updateLatestEpisodes() {
-    setStatus("Checking latest episodes...");
+  const newQueue = [];
 
-    const newQueue = [];
+  for (const playlistId of PLAYLISTS) {
+    const videoId = await getLatestFromPlaylist(playlistId);
+    if (videoId) newQueue.push(videoId);
+  }
 
-    for (let playlistId of PLAYLISTS) {
-        const videoId = await getLatestFromPlaylist(playlistId);
-        if (videoId) newQueue.push(videoId);
+  if (newQueue.length === 0) return;
+
+  if (JSON.stringify(videoQueue) !== JSON.stringify(newQueue)) {
+    videoQueue = newQueue;
+    currentIndex = 0;
+
+    setStatus("New episode detected 🔄");
+
+    if (player) {
+      player.loadVideoById(videoQueue[0]);
     }
-
-    // If queue changed → reset autoplay order
-    if (JSON.stringify(videoQueue) !== JSON.stringify(newQueue)) {
-        videoQueue = newQueue;
-        currentIndex = 0;
-        setStatus("Updated with new episodes 🔄");
-
-        if (player && videoQueue.length > 0) {
-            player.loadVideoById(videoQueue[0]);
-        }
-    } else {
-        setStatus("No new episodes ✅");
-    }
+  }
 }
 
-// --------------------------------------
+// ---------------- GET LATEST VIDEO FROM PLAYLIST ----------------
 async function getLatestFromPlaylist(playlistId) {
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems
-        ?part=contentDetails
-        &playlistId=${playlistId}
-        &maxResults=1
-        &key=${API_KEY}`.replace(/\s+/g, "");
+  const url = `https://www.googleapis.com/youtube/v3/playlistItems
+    ?part=contentDetails
+    &playlistId=${playlistId}
+    &maxResults=1
+    &key=${API_KEY}`.replace(/\s+/g, "");
 
-    const res = await fetch(url);
-    const data = await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
 
-    if (!data.items || data.items.length === 0) return null;
-    return data.items[0].contentDetails.videoId;
+  if (!data.items || data.items.length === 0) return null;
+  return data.items[0].contentDetails.videoId;
 }
 
-// --------------------------------------
+// ---------------- STATUS ----------------
 function setStatus(msg) {
-    document.getElementById("status").innerText = msg;
+  document.getElementById("status").innerText = msg;
 }
 
