@@ -1,6 +1,6 @@
 // ---------------- CONFIG ----------------
-const API_KEY = 'YOUR_YOUTUBE_API_KEY'; // Replace with your API key
-const PLAYLIST_ID = 'YOUR_PLAYLIST_ID'; // Replace with your playlist ID
+const API_KEY = 'AIzaSyB0Wp8FDfm8G31UK7JRxTnHpkgOeI5ClEQ'; // Replace with your API key
+const PLAYLIST_ID = 'PLXi_3CgEdI2ezCtbM4tAoWguVOPilGRKm'; // Replace with your playlist ID
 const MAX_RESULTS = 20; // Number of videos to fetch
 
 // ---------------- FETCH PLAYLIST ----------------
