@@ -1,75 +1,117 @@
-// ---------------- CONFIG ----------------
-const API_KEY = 'AIzaSyB0Wp8FDfm8G31UK7JRxTnHpkgOeI5ClEQ'; // Replace with your API key
-const PLAYLIST_ID = 'PLXi_3CgEdI2ezCtbM4tAoWguVOPilGRKm'; // Replace with your playlist ID
-const MAX_RESULTS = 20; // Number of videos to fetch
+// ================= CONFIG =================
+const API_KEY = 'AIzaSyB0Wp8FDfm8G31UK7JRxTnHpkgOeI5ClEQ';
+const SEED_PLAYLIST_ID = 'PLXi_3CgEdI2ezCtbM4tAoWguVOPilGRKm';
+const MAX_RESULTS = 50;
 
-// ---------------- FETCH PLAYLIST ----------------
-async function fetchPlaylist() {
-  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${PLAYLIST_ID}&maxResults=${MAX_RESULTS}&key=${API_KEY}`;
-  
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
+// ================= HELPERS =================
 
-    if (!data.items) {
-      console.error("No videos found or API limit reached", data);
-      return;
-    }
-
-    displayVideos(data.items);
-  } catch (err) {
-    console.error("Error fetching playlist:", err);
-  }
+// Extract probable teledrama name (remove episode numbers)
+function extractSeriesName(title) {
+  return title
+    .replace(/episode\s*\d+/i, '')
+    .replace(/ep\s*\d+/i, '')
+    .replace(/\d+/g, '')
+    .replace(/[|:-]/g, '')
+    .trim();
 }
 
-// ---------------- DISPLAY VIDEOS ----------------
-function displayVideos(videos) {
+// Extract episode number (best effort)
+function extractEpisodeNumber(text) {
+  const match = text.match(/(?:episode|ep)\s*(\d+)/i);
+  return match ? parseInt(match[1]) : null;
+}
+
+// ================= STEP 1: READ SEED PLAYLIST =================
+async function getSeedVideos() {
+  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${SEED_PLAYLIST_ID}&maxResults=${MAX_RESULTS}&key=${API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.items;
+}
+
+// ================= STEP 2: FIND LATEST EPISODE =================
+async function findLatestEpisode(channelId, seriesName) {
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&q=${encodeURIComponent(seriesName)}&type=video&order=date&maxResults=10&key=${API_KEY}`;
+  const res = await fetch(searchUrl);
+  const data = await res.json();
+
+  let best = null;
+  let maxEpisode = -1;
+
+  for (const item of data.items) {
+    const title = item.snippet.title;
+    const desc = item.snippet.description;
+    const ep = extractEpisodeNumber(title + " " + desc);
+
+    if (ep !== null && ep > maxEpisode) {
+      maxEpisode = ep;
+      best = {
+        id: item.id.videoId,
+        title: title,
+        thumb: item.snippet.thumbnails.medium.url
+      };
+    }
+  }
+
+  // Fallback: newest upload
+  if (!best && data.items.length > 0) {
+    const v = data.items[0];
+    best = {
+      id: v.id.videoId,
+      title: v.snippet.title,
+      thumb: v.snippet.thumbnails.medium.url
+    };
+  }
+
+  return best;
+}
+
+// ================= STEP 3: MAIN PIPELINE =================
+async function loadLatestEpisodes() {
+  const seedVideos = await getSeedVideos();
+  const seen = new Set();
+  const results = [];
+
+  for (const v of seedVideos) {
+    const snippet = v.snippet;
+    const channelId = snippet.videoOwnerChannelId;
+    const seriesName = extractSeriesName(snippet.title);
+
+    const key = channelId + seriesName;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const latest = await findLatestEpisode(channelId, seriesName);
+    if (latest) results.push(latest);
+  }
+
+  render(results);
+}
+
+// ================= RENDER =================
+function render(videos) {
   const container = document.getElementById('playlist');
-  container.innerHTML = '';
+  const player = document.getElementById('videoPlayer');
 
-  // Create the player container at the top
-  const playerDiv = document.createElement('div');
-  playerDiv.id = 'video-player';
-  playerDiv.style.width = '80%';
-  playerDiv.style.maxWidth = '800px';
-  playerDiv.style.height = '450px';
-  playerDiv.style.margin = '0 auto 40px';
-  container.appendChild(playerDiv);
+  if (videos.length > 0) {
+    player.src = `https://www.youtube.com/embed/${videos[0].id}?autoplay=1`;
+  }
 
-  // Create video cards
-  videos.forEach((video, index) => {
-    const videoId = video.snippet.resourceId.videoId;
-    const title = video.snippet.title;
-    const thumbnail = video.snippet.thumbnails.medium.url;
-
+  videos.forEach(v => {
     const card = document.createElement('div');
-    card.className = 'video-card';
-
+    card.className = 'card';
     card.onclick = () => {
-      // Load video in iframe
-      playerDiv.innerHTML = `
-        <iframe width="100%" height="100%" 
-          src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-          title="${title}" 
-          frameborder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-          allowfullscreen>
-        </iframe>`;
+      player.src = `https://www.youtube.com/embed/${v.id}?autoplay=1`;
     };
 
     card.innerHTML = `
-      <div class="video-thumbnail">
-        <img src="${thumbnail}" alt="${title}">
-      </div>
-      <div class="video-title">${title}</div>
+      <img src="${v.thumb}">
+      <div class="title">${v.title}</div>
     `;
 
     container.appendChild(card);
-
-    // Auto-click first video to play it on load
-    if (index === 0) card.click();
   });
 }
 
-// ---------------- INIT ----------------
-fetchPlaylist();
+// ================= START =================
+loadLatestEpisodes();
