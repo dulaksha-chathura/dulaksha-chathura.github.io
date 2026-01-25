@@ -5,27 +5,38 @@
 <title>Teledrama Auto Player</title>
 
 <style>
-    body {
-        background: #0f0f0f;
-        color: white;
-        font-family: Arial;
-        text-align: center;
-    }
-    #player {
-        margin-top: 20px;
-    }
+  body {
+    background: #0f0f0f;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+
+  #player-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+  }
+
+  #player {
+    width: 80%;
+    max-width: 900px;
+    aspect-ratio: 16 / 9;
+    background: black;
+  }
 </style>
 </head>
 
 <body>
 
 <h2>Latest Teledrama Episodes</h2>
-<p id="status">Loading...</p>
+<p id="status">Initializing…</p>
 
-<!-- Player container (NOT iframe directly) -->
-<div id="player"></div>
+<div id="player-wrapper">
+  <div id="player"></div>
+</div>
 
-<!-- YouTube Iframe API -->
+<!-- IMPORTANT: API first -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="player.js"></script>
 
