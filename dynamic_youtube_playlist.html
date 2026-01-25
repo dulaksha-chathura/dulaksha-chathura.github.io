@@ -2,48 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Teledrama Auto Player</title>
+  <title>Auto Teledrama Player</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
       background: #0f0f0f;
       color: white;
-      font-family: Arial, sans-serif;
       text-align: center;
-      margin: 0;
     }
 
     h1 {
-      margin: 20px 0;
+      margin: 30px 0 10px;
       color: #ffd700;
     }
 
     #status {
       font-size: 14px;
       color: #aaa;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
     #player {
-      max-width: 900px;
+      max-width: 960px;
       margin: auto;
       aspect-ratio: 16 / 9;
       background: black;
     }
 
     #episodeList {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 10px;
+      max-width: 960px;
+      margin: 30px auto 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 10px;
     }
 
     .episode {
-      background: #1e1e1e;
-      padding: 12px;
-      margin-bottom: 8px;
-      border-radius: 8px;
+      padding: 14px 18px;
+      background: #1c1c1c;
+      border-radius: 10px;
       cursor: pointer;
+      text-align: left;
+      transition: 0.3s;
+    }
+
+    .episode:hover {
+      background: #333;
     }
 
     .episode.active {
@@ -55,15 +63,16 @@
 </head>
 <body>
 
-<h1>Latest Teledrama Episodes</h1>
-<div id="status">Initializing player…</div>
+  <h1>Latest Teledrama Episodes</h1>
+  <div id="status">Loading…</div>
 
-<div id="player"></div>
-<div id="episodeList"></div>
+  <div id="player"></div>
 
-<!-- IMPORTANT ORDER -->
-<script src="https://www.youtube.com/iframe_api"></script>
-<script src="playlist.js"></script>
+  <h3>Episodes Queue</h3>
+  <div id="episodeList"></div>
 
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="playlist.js"></script>
 </body>
 </html>
