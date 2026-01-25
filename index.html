@@ -139,6 +139,46 @@
       color: white;
     }
 
+    <!--/////////////////////////////////////////////////-->
+
+    /* 🔹 PLAYLIST SECTION */
+    .playlist-section {
+      display: flex;
+      justify-content: center;
+      margin-top: 60px;
+    }
+
+    .playlist-box {
+      width: 420px;
+      height: 220px;
+      background: linear-gradient(
+        rgba(0,0,0,0.6),
+        rgba(0,0,0,0.6)
+      );
+      border-radius: 20px;
+      border: 2px solid white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .playlist-box:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 25px rgba(255,255,255,0.3);
+    }
+
+    .playlist-play {
+      font-size: 48px;
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    <!--////////////////////////////////////////////////////////////-->
+
     /* Menu icon (three bars) */
     #menu-icon {
       position: absolute;
@@ -200,6 +240,13 @@
         font-size: 18px;
         padding: 30px 20px;
       }
+
+      <!--////////////////////////////////////-->
+        
+      .playlist-box {
+        width: 90%;
+
+      <!--////////////////////////////////////-->
     
       body {
         padding-top: 80px;
@@ -232,6 +279,15 @@
     <div class="tab" onclick="activateTab(this)">Signal and Systems</div>
     <div class="tab" onclick="activateTab(this)">Advanced Mathematics</div>
     <div class="tab" onclick="activateTab(this)">Electronic and Telecommunication Engineering</div>
+  </div>
+
+  <!-- 🔹 Playlist Box -->
+  <div class="playlist-section">
+    <div class="playlist-box" onclick="location.href='dynamic_youtube_playlist.html'">
+      <div class="playlist-play">▶</div>
+      <h2>YouTube Playlist</h2>
+      <p>Auto-updating episodes</p>
+    </div>
   </div>
 
   <!-- Footer -->
