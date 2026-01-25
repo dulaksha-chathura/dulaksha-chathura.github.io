@@ -1,10 +1,19 @@
 const API_KEY = "AIzaSyB0Wp8FDfm8G31UK7JRxTnHpkgOeI5ClEQ";
 
 // 🔹 ADD ALL PLAYLIST IDS HERE (ORDER MATTERS)
+
+//kodukari
+//sitha nidi ne
+//iskole
+//sangeethe
+//man adarey
+
 const PLAYLISTS = [
-    "PLcwO5OebB2EmaLQ0-8v4yCSHNroy13_rg",
+    "PLcwO5OebB2EnuqEVtYtAt8lIhLh5BfjVR",
+    "PLcwO5OebB2En8YWYGlT6YAFd6BcQuf1NL",
+    "PLcwO5OebB2El9lowzMY0y2tdRSp_nj3Fb",
     "PLcwO5OebB2EnMZ2oNg9yOiaBlDcLUydaH",
-    "PLcwO5OebB2EnuqEVtYtAt8lIhLh5BfjVR"
+    "PLcwO5OebB2EmaLQ0-8v4yCSHNroy13_rg"
 ];
 
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
