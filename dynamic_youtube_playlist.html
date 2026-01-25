@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Latest Teledrama Episodes</title>
+  <title>Dynamic Teledrama Playlist</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -10,8 +10,9 @@
       font-family: Arial, sans-serif;
       background: #111;
       color: white;
-      text-align: center;
       margin: 0;
+      padding: 0;
+      text-align: center;
     }
 
     h1 {
@@ -19,63 +20,57 @@
       color: #ffd700;
     }
 
-    #player {
-      width: 90%;
-      max-width: 800px;
-      aspect-ratio: 16/9;
-      margin: 20px auto;
-      background: black;
+    a {
+      color: #ffd700;
+      text-decoration: none;
     }
 
-    iframe {
-      width: 100%;
-      height: 100%;
-    }
-
-    .playlist {
+    .playlist-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 20px;
-      margin: 40px;
+      padding: 30px;
     }
 
-    .card {
+    .video-card {
       width: 300px;
+      background: rgba(255,255,255,0.06);
       border: 2px solid white;
-      border-radius: 15px;
+      border-radius: 16px;
       overflow: hidden;
       cursor: pointer;
       transition: 0.3s;
-      background: rgba(255,255,255,0.05);
     }
 
-    .card:hover {
+    .video-card:hover {
       transform: scale(1.05);
       box-shadow: 0 0 15px rgba(255,255,255,0.3);
     }
 
-    img {
+    .video-card img {
       width: 100%;
     }
 
-    .title {
+    .video-title {
       padding: 10px;
       color: #ffd700;
       font-size: 15px;
     }
+
+    .loading {
+      margin-top: 40px;
+      font-size: 18px;
+    }
   </style>
 </head>
-
 <body>
 
-<h1>Latest Teledrama Episodes</h1>
+<h1>📺 Latest Teledrama Episodes</h1>
+<a href="index.html">← Back to Home</a>
 
-<div id="player">
-  <iframe id="videoPlayer" allowfullscreen allow="autoplay"></iframe>
-</div>
-
-<div class="playlist" id="playlist"></div>
+<div class="loading" id="loading">Loading latest episodes...</div>
+<div class="playlist-container" id="playlist"></div>
 
 <script src="playlist.js"></script>
 </body>
