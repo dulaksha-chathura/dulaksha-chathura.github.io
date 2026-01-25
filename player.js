@@ -11,21 +11,62 @@ const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 let videoQueue = [];
 let currentIndex = 0;
+let player;
 
 // --------------------------------------
-// INIT
+// YouTube API ready
+// --------------------------------------
+function onYouTubeIframeAPIReady() {
+    init();
+}
+
 // --------------------------------------
 async function init() {
     await updateLatestEpisodes();
-    playCurrent();
+    createPlayer(videoQueue[0]);
     setInterval(updateLatestEpisodes, CHECK_INTERVAL);
 }
 
 // --------------------------------------
-// GET LATEST VIDEO FROM EACH PLAYLIST
+// Create YT Player
+// --------------------------------------
+function createPlayer(videoId) {
+    player = new YT.Player("player", {
+        height: "450",
+        width: "80%",
+        videoId: videoId,
+        playerVars: {
+            autoplay: 1,
+            rel: 0
+        },
+        events: {
+            onStateChange: onPlayerStateChange
+        }
+    });
+}
+
+// --------------------------------------
+// Detect END → Play next
+// --------------------------------------
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+        playNext();
+    }
+}
+
+// --------------------------------------
+function playNext() {
+    if (videoQueue.length === 0) return;
+
+    currentIndex = (currentIndex + 1) % videoQueue.length;
+    player.loadVideoById(videoQueue[currentIndex]);
+}
+
+// --------------------------------------
+// Fetch latest episode from all playlists
 // --------------------------------------
 async function updateLatestEpisodes() {
-    setStatus("Checking playlists for latest episodes...");
+    setStatus("Checking latest episodes...");
 
     const newQueue = [];
 
@@ -34,24 +75,26 @@ async function updateLatestEpisodes() {
         if (videoId) newQueue.push(videoId);
     }
 
-    // Update queue ONLY if changed
+    // If queue changed → reset autoplay order
     if (JSON.stringify(videoQueue) !== JSON.stringify(newQueue)) {
         videoQueue = newQueue;
         currentIndex = 0;
-        setStatus("New episodes detected 🔄");
+        setStatus("Updated with new episodes 🔄");
+
+        if (player && videoQueue.length > 0) {
+            player.loadVideoById(videoQueue[0]);
+        }
     } else {
         setStatus("No new episodes ✅");
     }
 }
 
 // --------------------------------------
-// FETCH FIRST ITEM OF PLAYLIST
-// --------------------------------------
 async function getLatestFromPlaylist(playlistId) {
     const url = `https://www.googleapis.com/youtube/v3/playlistItems
         ?part=contentDetails
-        &maxResults=1
         &playlistId=${playlistId}
+        &maxResults=1
         &key=${API_KEY}`.replace(/\s+/g, "");
 
     const res = await fetch(url);
@@ -62,32 +105,7 @@ async function getLatestFromPlaylist(playlistId) {
 }
 
 // --------------------------------------
-// AUTOPLAY LOGIC
-// --------------------------------------
-function playCurrent() {
-    if (videoQueue.length === 0) return;
-
-    const videoId = videoQueue[currentIndex];
-    const iframe = document.getElementById("player");
-
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
-
-    currentIndex = (currentIndex + 1) % videoQueue.length;
-}
-
-// --------------------------------------
-// DETECT VIDEO END → PLAY NEXT
-// --------------------------------------
-window.addEventListener("message", event => {
-    if (event.data?.event === "onStateChange" && event.data.info === 0) {
-        playCurrent();
-    }
-});
-
-// --------------------------------------
 function setStatus(msg) {
     document.getElementById("status").innerText = msg;
 }
 
-// START
-init();
