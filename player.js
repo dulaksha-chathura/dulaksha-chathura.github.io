@@ -18,32 +18,75 @@ const PLAYLISTS = [
 
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-let videoQueue = [];
-let currentIndex = 0;
+// ================= STATE =================
 let player;
-let apiReady = false;
+let videoQueue = []; // [{ videoId, title }]
+let currentIndex = 0;
 
-// ---------------- API READY (MUST BE GLOBAL) ----------------
-window.onYouTubeIframeAPIReady = function () {
-  apiReady = true;
-  init();
-};
+// ================= STATUS =================
+function setStatus(text) {
+  document.getElementById("status").innerText = text;
+}
 
-// ---------------- INIT ----------------
-async function init() {
-  setStatus("Loading latest episodes…");
-  await updateLatestEpisodes();
-
-  if (videoQueue.length === 0) {
-    setStatus("No videos found");
-    return;
-  }
-
-  createPlayer(videoQueue[0]);
+// ================= YOUTUBE API =================
+function onYouTubeIframeAPIReady() {
+  updateLatestEpisodes();
   setInterval(updateLatestEpisodes, CHECK_INTERVAL);
 }
 
-// ---------------- CREATE PLAYER ----------------
+// ================= FETCH LATEST VIDEO =================
+async function getLatestFromPlaylist(playlistId) {
+  const url =
+    `https://www.googleapis.com/youtube/v3/playlistItems` +
+    `?part=snippet&playlistId=${playlistId}&maxResults=1&key=${API_KEY}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) return null;
+
+    const item = data.items[0].snippet;
+
+    return {
+      videoId: item.resourceId.videoId,
+      title: item.title
+    };
+  } catch (err) {
+    console.error("Playlist fetch error", err);
+    return null;
+  }
+}
+
+// ================= UPDATE ALL =================
+async function updateLatestEpisodes() {
+  setStatus("Checking for new episodes…");
+
+  const newQueue = [];
+
+  for (const pid of PLAYLISTS) {
+    const video = await getLatestFromPlaylist(pid);
+    if (video) newQueue.push(video);
+  }
+
+  if (JSON.stringify(newQueue) !== JSON.stringify(videoQueue)) {
+    videoQueue = newQueue;
+    currentIndex = 0;
+    renderEpisodeList();
+    setStatus("New episodes loaded");
+
+    if (!player) {
+      createPlayer(videoQueue[0].videoId);
+    } else {
+      player.loadVideoById(videoQueue[0].videoId);
+      highlightActive();
+    }
+  } else {
+    setStatus("No new episodes");
+  }
+}
+
+// ================= PLAYER =================
 function createPlayer(videoId) {
   player = new YT.Player("player", {
     videoId: videoId,
@@ -52,67 +95,53 @@ function createPlayer(videoId) {
       rel: 0
     },
     events: {
-      onReady: () => setStatus("Playing ▶"),
+      onReady: () => {
+        setStatus("Playing ▶");
+        highlightActive();
+      },
       onStateChange: onPlayerStateChange
     }
   });
 }
 
-// ---------------- PLAYER STATE ----------------
 function onPlayerStateChange(event) {
   if (event.data === YT.PlayerState.ENDED) {
     playNext();
   }
 }
 
-// ---------------- PLAY NEXT ----------------
 function playNext() {
   if (videoQueue.length === 0) return;
 
   currentIndex = (currentIndex + 1) % videoQueue.length;
-  player.loadVideoById(videoQueue[currentIndex]);
+  player.loadVideoById(videoQueue[currentIndex].videoId);
+  highlightActive();
 }
 
-// ---------------- FETCH LATEST EPISODES ----------------
-async function updateLatestEpisodes() {
-  const newQueue = [];
+// ================= UI =================
+function renderEpisodeList() {
+  const list = document.getElementById("episodeList");
+  list.innerHTML = "";
 
-  for (const playlistId of PLAYLISTS) {
-    const videoId = await getLatestFromPlaylist(playlistId);
-    if (videoId) newQueue.push(videoId);
-  }
+  videoQueue.forEach((video, index) => {
+    const div = document.createElement("div");
+    div.className = "episode";
+    div.innerText = video.title;
 
-  if (newQueue.length === 0) return;
+    div.onclick = () => {
+      currentIndex = index;
+      player.loadVideoById(video.videoId);
+      highlightActive();
+    };
 
-  if (JSON.stringify(videoQueue) !== JSON.stringify(newQueue)) {
-    videoQueue = newQueue;
-    currentIndex = 0;
+    list.appendChild(div);
+  });
 
-    setStatus("New episode detected 🔄");
-
-    if (player) {
-      player.loadVideoById(videoQueue[0]);
-    }
-  }
+  highlightActive();
 }
 
-// ---------------- GET LATEST VIDEO FROM PLAYLIST ----------------
-async function getLatestFromPlaylist(playlistId) {
-  const url = `https://www.googleapis.com/youtube/v3/playlistItems
-    ?part=contentDetails
-    &playlistId=${playlistId}
-    &maxResults=1
-    &key=${API_KEY}`.replace(/\s+/g, "");
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!data.items || data.items.length === 0) return null;
-  return data.items[0].contentDetails.videoId;
+function highlightActive() {
+  document.querySelectorAll(".episode").forEach((el, i) => {
+    el.classList.toggle("active", i === currentIndex);
+  });
 }
-
-// ---------------- STATUS ----------------
-function setStatus(msg) {
-  document.getElementById("status").innerText = msg;
-}
-
