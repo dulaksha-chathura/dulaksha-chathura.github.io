@@ -36,6 +36,17 @@
       color: black;
     }
 
+    /* Video Player */
+    #video-player {
+      margin: 40px auto;
+      max-width: 800px;
+      height: 450px;
+      background-color: black;
+      border: 2px solid #ffd700;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
     .playlist-container {
       display: flex;
       flex-wrap: wrap;
@@ -76,6 +87,10 @@
       .video-card {
         width: 90%;
       }
+      #video-player {
+        width: 90%;
+        height: 250px;
+      }
     }
   </style>
 </head>
@@ -84,9 +99,13 @@
   <h1>Dynamic Teledrama Playlist</h1>
   <a href="index.html" id="backBtn">← Back to Home</a>
 
+  <!-- Video Player -->
+  <div id="video-player"></div>
+
+  <!-- Playlist thumbnails -->
   <div class="playlist-container" id="playlist"></div>
 
-  <!-- YouTube API script -->
+  <!-- JS -->
   <script src="playlist.js"></script>
 </body>
 </html>
