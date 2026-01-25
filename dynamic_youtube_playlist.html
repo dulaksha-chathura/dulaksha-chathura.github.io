@@ -1,44 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Teledrama Auto Player</title>
+  <meta charset="UTF-8">
+  <title>Auto Teledrama Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-  body {
-    background: #0f0f0f;
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
-  }
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      text-align: center;
+    }
 
-  #player-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-  }
+    h1 {
+      margin: 30px 0 10px;
+      color: #ffd700;
+    }
 
-  #player {
-    width: 80%;
-    max-width: 900px;
-    aspect-ratio: 16 / 9;
-    background: black;
-  }
-</style>
+    #status {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+
+    #player {
+      max-width: 960px;
+      margin: auto;
+      aspect-ratio: 16 / 9;
+      background: black;
+    }
+
+    #episodeList {
+      max-width: 960px;
+      margin: 30px auto 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 10px;
+    }
+
+    .episode {
+      padding: 14px 18px;
+      background: #1c1c1c;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.3s;
+    }
+
+    .episode:hover {
+      background: #333;
+    }
+
+    .episode.active {
+      background: #ffd700;
+      color: black;
+      font-weight: bold;
+    }
+  </style>
 </head>
-
 <body>
 
-<h2>Latest Teledrama Episodes</h2>
-<p id="status">Initializing…</p>
+  <h1>Latest Teledrama Episodes</h1>
+  <div id="status">Loading…</div>
 
-<div id="player-wrapper">
   <div id="player"></div>
-</div>
 
-<!-- IMPORTANT: API first -->
-<script src="https://www.youtube.com/iframe_api"></script>
-<script src="player.js"></script>
+  <h3>Episodes Queue</h3>
+  <div id="episodeList"></div>
 
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="playlist.js"></script>
 </body>
 </html>
