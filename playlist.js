@@ -17,7 +17,7 @@ const PLAYLISTS = [
     "PLcwO5OebB2EmaLQ0-8v4yCSHNroy13_rg"
 ];
 
-const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const CHECK_INTERVAL = 1 * 60 * 1000; // 5 minutes
 
 // ================= STATE =================
 let player;
