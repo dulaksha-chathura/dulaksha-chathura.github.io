@@ -13,6 +13,7 @@ const PLAYLISTS = [
     "PLcwO5OebB2En8YWYGlT6YAFd6BcQuf1NL",
     "PLcwO5OebB2El9lowzMY0y2tdRSp_nj3Fb",
     "PLcwO5OebB2EnMZ2oNg9yOiaBlDcLUydaH",
+    "PLqTHbZFu4wu9k42VPeWwFVwdolEpGnblr",
     "PLcwO5OebB2EmaLQ0-8v4yCSHNroy13_rg"
 ];
 
