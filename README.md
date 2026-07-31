@@ -1,2 +1,1 @@
-<a href="dulaksha-chathura.github.io" target="_blank">dulaksha-chathura.github.io</a>
-
+[dulaksha-chathura.github.io](https://dulaksha-chathura.github.io)
